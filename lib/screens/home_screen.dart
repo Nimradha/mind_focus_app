@@ -1,0 +1,804 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'details.dart';
+import 'achievement_screen.dart';
+import 'package:audioplayers/audioplayers.dart' hide Source;
+import 'word_game_screen.dart';
+import 'running_timer_screen.dart';
+import 'imagination_timer_screen.dart';
+
+class Exercise {
+  final String title;
+  final String subtitle;
+  final String instructions;
+  final String imagePath;
+  final String duration;
+  final String completionMessage;
+  final VoidCallback onStart;
+  final bool isEnabled;
+  final String? disabledText;
+
+  Exercise({
+    required this.title,
+    required this.subtitle,
+    required this.instructions,
+    required this.imagePath,
+    required this.duration,
+    required this.completionMessage,
+    required this.onStart,
+    this.isEnabled = true,
+    this.disabledText,
+  });
+}
+
+// 1. THE WIDGET CLASS
+class HomeScreen extends StatefulWidget {
+  final VoidCallback? onTaskPressed; // Add this
+  const HomeScreen({super.key, this.onTaskPressed});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+// 2. THE STATE CLASS (This handles all the logic and UI)
+class _HomeScreenState extends State<HomeScreen> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isMusicPlaying = false;
+
+  int _completedDaysCount = 0;
+  // This lives inside the State class now
+  List<bool> _isDoneList = [false, false, false, false];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProgress();
+  }
+
+  void _loadUserProgress() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get(const GetOptions(source: Source.server));
+        debugPrint("Firestore: loaded document. isFromCache = ${doc.metadata.isFromCache}");
+        if (doc.exists && doc.data() != null) {
+          final data = doc.data()!;
+
+          String today = DateTime.now().toString().split(' ')[0];
+          String? lastCompletionDate = data['lastCompletionDate'];
+          // The date the user last clicked ANY checkbox
+          String? lastActiveDate = data['lastActiveDate'];
+
+          setState(() {
+            _completedDaysCount = data['completedDaysCount'] ?? 0;
+            
+            List<bool> savedList = List<bool>.from(data['lastDoneList'] ?? [false, false, false, false]);
+            int doneCount = savedList.where((item) => item).length;
+            
+            bool isNewDay = lastActiveDate != today;
+
+            if (isNewDay) {
+              if (doneCount == 4) {
+                // Completed yesterday's tasks, fresh start today
+                _isDoneList = [false, false, false, false];
+              } else {
+                // Didn't finish yesterday's tasks
+                DateTime? creationTime = user.metadata.creationTime;
+                int daysSinceCreation = creationTime != null ? DateTime.now().difference(creationTime).inDays : 0;
+                
+                if (daysSinceCreation < 14) {
+                  // First 2 weeks since account creation: always give a fresh start
+                  _isDoneList = [false, false, false, false];
+                } else {
+                  // After 2 weeks: carry over uncompleted tasks
+                  _isDoneList = savedList;
+                }
+              }
+              // Sync the potentially new start state to Firebase
+              _updateFirebaseList();
+            } else {
+              // Same day, resume where left off
+              _isDoneList = savedList;
+            }
+
+            // Evening Meditation Reset Logic (only if they have tasks done)
+            bool isAfter6PM = DateTime.now().hour >= 18;
+            bool hasCompletedMorningTasks = _isDoneList.length >= 3 && _isDoneList[0] && _isDoneList[1] && _isDoneList[2];
+            bool hasResetMeditation = data['eveningMeditationResetDate'] == today;
+
+            if (isAfter6PM && hasCompletedMorningTasks && !hasResetMeditation) {
+              _isDoneList[0] = false; // Uncheck Meditation
+              FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+                'lastDoneList': _isDoneList,
+                'eveningMeditationResetDate': today,
+              }, SetOptions(merge: true));
+            }
+            
+            _isLoading = false;
+
+          });
+
+        } else {
+          // If the document doesn't exist (new user), stop loading so the UI can render
+          setState(() => _isLoading = false);
+        }
+      } catch (e) {
+        debugPrint("Error loading: $e");
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _updateFirebaseList() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        String today = DateTime.now().toString().split(' ')[0];
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'lastDoneList': _isDoneList,
+          'lastActiveDate': today,
+        }, SetOptions(merge: true));
+      } catch (e) {
+        debugPrint("Error updating list: $e");
+      }
+    }
+  }
+
+  List<Exercise> _getDynamicExercises() {
+    // Instructions change every 3 SUCCESSFUL days
+    int phase = _completedDaysCount ~/ 3;
+    bool isBefore6PM = DateTime.now().hour < 18;
+
+    return [
+      Exercise(
+        title: "Meditation",
+        subtitle: "Daily Mindset",
+        instructions: _getMeditationInstructions(),
+        imagePath: "assets/images/meditation.jpeg",
+        duration: "${_getMeditationDurationMinutes()} Mins",
+        completionMessage: "Zen achieved! 🧘‍♂️",
+        onStart: _playMeditationMusic,
+        isEnabled: true,
+        disabledText: null,
+      ),
+      Exercise(
+        title: "Word Memory Game",
+        subtitle: "Cognitive Speed",
+        instructions: _completedDaysCount < 7
+            ? "1 word is displayed for 2 second. Next a question is asked related to that word.Select your answer out of 4 choices."
+            : _completedDaysCount < 14
+            ? "2 words are displayed for 4 seconds. Next 2 questions are asked.Select your answer."
+            : _completedDaysCount < 21
+            ? "3 words are displayed for  5 seconds. Next 3 questions are asked.Select your answer."
+            : "4 words are displayed for  5 seconds. Next 4 questions are asked.Select your answer.",
+        imagePath: "assets/images/memory.png",
+        duration: _completedDaysCount < 7 ? "2 Mins" : _completedDaysCount < 14 ? "4 Mins" : "5 Mins",
+        completionMessage: "Memory sharpened! 🧠",
+        isEnabled: isBefore6PM,
+        disabledText: isBefore6PM ? null : "To be done before 6pm",
+        onStart: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WordGameScreen(
+                completedDaysCount: _completedDaysCount, // Pass the progress
+              ),
+            ),
+          );
+          // Later: Navigator.push(context, MaterialPageRoute(builder: (context) => TimerScreen(minutes: 10)));
+        },
+      ),
+      Exercise(
+        title: "Running Exercise",
+        subtitle: "Cardio & Focus",
+        instructions: _getRunningInstructions(),
+        imagePath: "assets/images/run.png",
+        duration: _completedDaysCount < 15 ? "5 Mins" : "10 Mins",
+        completionMessage: "Endorphins released! 🏃‍♂️",
+        isEnabled: isBefore6PM,
+        disabledText: isBefore6PM ? null : "To be done before 6pm",
+        onStart: () async{
+          final isFinished = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RunningTimerScreen(
+                completedDaysCount: _completedDaysCount,
+              ),
+            ),
+          );
+
+          if (isFinished == true) {
+            // Logic to mark the exercise as done in your home screen list
+            _markExerciseAsDone("Running");
+          }
+          // Later: Navigator.push(context, MaterialPageRoute(builder: (context) => TimerScreen(minutes: 10)));
+        },
+      ),
+      Exercise(
+        title: _getFourthExerciseTitle(),
+        subtitle: "Creative Agility",
+        instructions: _getFourthExerciseInstructions(),
+        imagePath: "assets/images/imagination.png",
+        duration: "5 Mins",
+        completionMessage: "Creativity flowing! 🎨",
+        isEnabled: !isBefore6PM,
+        disabledText: !isBefore6PM ? null : "To be done after 6pm",
+        onStart: () async{
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ImaginationTimerScreen(
+                completedDaysCount: _completedDaysCount,
+                instruction: _getFourthExerciseInstructions(),
+              ),
+            ),
+          );
+
+          if (result == true) {
+            _markExerciseAsDone(_getFourthExerciseTitle());
+          }
+          // Later: Navigator.push(context, MaterialPageRoute(builder: (context) => TimerScreen(minutes: 10)));
+        },
+      ),
+    ];
+  }
+
+  void _showSuccessPopup(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _checkCompletion() async{
+    int doneCount = _isDoneList.where((item) => item).length;
+    bool isBefore6PM = DateTime.now().hour < 18;
+
+    // Trigger achievement when the first 3 morning tasks are done
+    if (doneCount == 3 && isBefore6PM) {
+      if (!mounted) return;
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const AchievementScreen()));
+      return; // Do not increment the day counter yet
+    }
+
+    if (doneCount == _isDoneList.length) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        String today = DateTime.now().toString().split(' ')[0];
+        try {
+          // Successful Day! Increment counter and Reset checks for tomorrow
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+            'completedDaysCount': FieldValue.increment(1),
+            'lastCompletionDate': today, // Store the date he finished
+            'lastDoneList': _isDoneList,
+            'lastActiveDate': today,
+          }, SetOptions(merge: true));
+
+          setState(() {
+            _completedDaysCount++;
+          });
+        } catch (e) {
+          debugPrint("Error updating completion: $e");
+        }
+      }
+      if (!mounted) return;
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const AchievementScreen()));
+    }
+  }
+
+  void _playMeditationMusic() async {
+    if (_isMusicPlaying) {
+      // If already playing, stop it (Toggle behavior)
+      await _audioPlayer.stop();
+      setState(() => _isMusicPlaying = false);
+      debugPrint("Music Stopped manually");
+    } else {
+      try {
+        // 1. Play the asset
+        await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+        await _audioPlayer.play(AssetSource('audio/meditation.mp3'));
+        setState(() => _isMusicPlaying = true);
+        debugPrint("Music Started");
+
+        // 2. Set a timer to stop after duration
+        int durationMinutes = _getMeditationDurationMinutes();
+        Future.delayed(Duration(minutes: durationMinutes), () async {
+          if (_isMusicPlaying) {
+            await _audioPlayer.stop();
+            setState(() => _isMusicPlaying = false);
+            _showSuccessPopup("Meditation session complete! 🧘‍♀️");
+          }
+        });
+
+      } catch (e) {
+        debugPrint("Error playing audio: $e");
+        _showSuccessPopup("Could not load music file.");
+      }
+    }
+  }
+
+  // CRITICAL: Always clean up the player when the screen is closed
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  void _markExerciseAsDone(String title) async {
+    // 1. Find the index of the exercise by its title
+    final exercises = _getDynamicExercises();
+    int index = exercises.indexWhere((e) => e.title == title);
+
+    // 2. If found and not already done, update the state
+    if (index != -1 && !_isDoneList[index]) {
+      setState(() {
+        _isDoneList[index] = true;
+      });
+
+      // 3. Sync to Firebase
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        try {
+          String today = DateTime.now().toString().split(' ')[0];
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+            'lastDoneList': _isDoneList,
+            'lastActiveDate': today,
+          }, SetOptions(merge: true));
+        } catch (e) {
+          debugPrint("Error updating task: $e");
+        }
+      }
+
+      // 4. Show the green success bar and check if the whole day is finished
+      _showSuccessPopup(exercises[index].completionMessage);
+      _checkCompletion();
+    }
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+
+    final dynamicExercises = _getDynamicExercises();
+    // Calculate progress for the Daily Goal card
+    int doneCount = _isDoneList.where((item) => item).length;
+    double progress = doneCount / _isDoneList.length;
+    int percentage = (progress * 100).round();
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 25),
+              _buildWelcomeCard(),
+              const SizedBox(height: 25),
+              // Pass the progress data to the card
+              _buildDailyGoalCard(doneCount, progress,percentage),
+              const SizedBox(height: 30),
+              _buildExerciseSection(dynamicExercises),
+              const SizedBox(height: 25),
+              _buildAchievementCard(),
+            ],
+          ),
+        ),
+      ),
+
+    );
+  }
+
+  // --- 1. Top Header ---
+  Widget _buildHeader() {
+    final User? user = FirebaseAuth.instance.currentUser;
+    String displayName = user?.email != null ? user!.email!.split('@')[0] : "Friend";
+    // Truncate long display names to first 5 characters with ellipsis
+    String shortDisplayName = displayName.length > 5 ? '${displayName.substring(0,5)}...' : displayName;
+    DateTime now = DateTime.now();
+    List<String> months = [
+      "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+      "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+    ];
+    String formattedDate = "${months[now.month - 1]} ${now.day}, ${now.year}";
+
+    return Row(
+      children: [
+        const CircleAvatar(
+          radius: 25,
+          backgroundImage: AssetImage('assets/images/user.png'),
+        ),
+        const SizedBox(width: 15),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(formattedDate, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            Text("Good morning, $shortDisplayName!",
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+          ),
+          child: Icon(Icons.notifications_none, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
+
+        )
+      ],
+    );
+  }
+
+  // --- 2. Welcome Card ---
+  Widget _buildWelcomeCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("Welcome to MindGym!", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Text("Your daily partner for mental fitness. Train your focus, memory and cognitive agility with fun,bite-sized exercises.",
+              style: TextStyle(color: Colors.grey[600], height: 1.5)),
+        ],
+      ),
+    );
+  }
+
+  // --- 3. Daily Goal Card (Updated to take variables) ---
+  Widget _buildDailyGoalCard(int doneCount, double progress, int percentage) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.green.shade100),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Daily Goal", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                const Text("Great job! You've unlocked today's customization bonus."),
+                const SizedBox(height: 12),
+                _buildStatusBadge((progress * 100).round()),
+              ],
+            ),
+          ),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                height: 80, width: 80,
+                child: CircularProgressIndicator(
+                  value: progress,
+                  strokeWidth: 8,
+                  backgroundColor: Colors.white,
+                  color: Colors.green,
+                ),
+              ),
+              Text("$doneCount/4", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(int percent) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+    color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
+    borderRadius: BorderRadius.circular(20),
+  ),
+      child:  Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.trending_up, color: Colors.green, size: 16),
+          SizedBox(width: 5),
+          Text("+$percent% today", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  // --- 4. Exercise Section ---
+  Widget _buildExerciseSection(List<Exercise> exercises) {
+    return Column(
+      children: [
+        for (int i = 0; i < exercises.length; i++)
+          _exerciseTile(i, exercises[i]),
+      ],
+    );
+  }
+
+  Widget _exerciseTile(int index, Exercise exercise) {
+    bool isDone = _isDoneList[index];
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(30),
+        border: Theme.of(context).brightness == Brightness.dark
+            ? Border.all(color: Colors.green.shade100)
+            : Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          // 1. Checkbox: This is now the ONLY place to toggle completion
+          GestureDetector(
+            onTap: !exercise.isEnabled ? null : () async{
+              setState(() {
+               _isDoneList[index] = !_isDoneList[index];
+              });
+              final user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                try {
+                  String today = DateTime.now().toString().split(' ')[0];
+                  await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+                   'lastDoneList': _isDoneList,
+                   'lastActiveDate': today,
+                  }, SetOptions(merge: true));
+                } catch (e) {
+                  debugPrint("Error saving checkbox state: $e");
+                }
+              }
+                if (_isDoneList[index]) {
+                  _showSuccessPopup(exercise.completionMessage);
+                  _checkCompletion();
+                }
+              },
+
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5.0), // Increases tap area
+              child: Icon(
+                isDone ? Icons.check_circle : Icons.circle_outlined,
+                color: isDone ? Colors.green : (exercise.isEnabled ? Colors.grey : Colors.grey.shade300),
+              ),
+            ),
+          ),
+          const SizedBox(width: 15),
+
+          // 2. Exercise Info (Tapping here does nothing now)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title (full name)
+                Text(
+                  exercise.title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: exercise.isEnabled
+                        ? (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black)
+                        : Colors.grey,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.visible,
+                ),
+                Text(exercise.subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                if (!exercise.isEnabled && exercise.disabledText != null)
+                  Text(exercise.disabledText!, style: const TextStyle(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+
+          const Spacer(),
+
+          // 3. Dynamic Button/Badge
+          isDone
+              ? _buildBadge("DONE", Colors.green.shade100, Colors.green)
+              : ElevatedButton(
+            onPressed: !exercise.isEnabled ? null : () async {
+
+              // Clicking "Start" still marks it as done (logical progression)
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TaskDetailScreen(
+                    exercise: exercise
+                  ),
+                ),
+              );
+
+              // If they clicked "Mark as Done" in details.dart
+              if (result == true) {
+                setState(() {
+                  _isDoneList[index] = true;
+                });
+
+                final user = FirebaseAuth.instance.currentUser;
+                if (user != null) {
+                  try {
+                    String today = DateTime.now().toString().split(' ')[0];
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user.uid)
+                        .set({
+                      'lastDoneList': _isDoneList, // This sends the new 'true' state
+                      'lastActiveDate': today,
+                    }, SetOptions(merge: true));
+                  } catch (e) {
+                    debugPrint("Error saving task details: $e");
+                  }
+                }
+
+                _showSuccessPopup(exercise.completionMessage);
+                _checkCompletion();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black
+                  : Colors.white,
+              elevation: 0,
+              shape: const StadiumBorder(),
+              side: BorderSide(color: Colors.green.shade100),
+            ),
+            child: Text("Start", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade800 : Colors.green)),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBadge(String label, Color bg, Color text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
+      child: Text(label, style: TextStyle(color: text, fontSize: 10, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  // --- 5. Achievement Card ---
+  Widget _buildAchievementCard() {
+    return Container(
+      padding: const EdgeInsets.all(25),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: Colors.green.shade100),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(Icons.stars, color: Colors.orange),
+              SizedBox(width: 10),
+              Text("ACHIEVEMENT UNLOCKED", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, fontSize: 10)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text("Master Your Momentum",
+              style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, fontSize: 22, fontWeight: FontWeight.bold)),
+          const Text("After completing today's exercises now it's time to plan rest of your day with extra training and plans", style: TextStyle(color: Colors.grey, fontSize: 15)),
+          const SizedBox(height: 20),
+          _actionButton("Today's Tasks", null, Colors.green, Colors.white,() {
+            if (widget.onTaskPressed != null) {
+              widget.onTaskPressed!(); // This triggers the tab switch in MainWrapper
+            }
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionButton(String label, IconData? icon, Color bg, Color text, VoidCallback? onTap) {
+    return Material(
+      color: Colors.transparent, // Keeps the underlying style
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(15), // Matches your container
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, color: text, size: 18),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                label,
+                style: TextStyle(color: text, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  int _getMeditationDurationMinutes() {
+    if (_completedDaysCount < 7) return 5;
+    if (_completedDaysCount < 14) return 10;
+    if (_completedDaysCount < 21) return 15;
+    return 20;
+  }
+
+  String _getMeditationInstructions() {
+    int mins = _getMeditationDurationMinutes();
+    return "Give your mind a break.Find a quiet space and focus on your breath for $mins minutes.";
+  }
+
+  String _getRunningInstructions() {
+    int day = _completedDaysCount + 1;
+
+    // --- 5 MINUTE SESSIONS (Days 1 - 15) ---
+    if (day <= 3) return "Count down from 500, decreasing by 3 each time (500, 497, 494...).";
+    if (day <= 6) return "Count down from 500, decreasing by 7 each time (500, 493, 486...).";
+    if (day <= 9) return "Count down from 500, decreasing by 13 each time (500, 487, 474...).";
+    if (day <= 12) return "Count down from 1000, decreasing by 3 each time (1000, 997, 994...).";
+    if (day <= 15) return "Count down from 1000, decreasing by 7 each time (1000, 993, 986...).";
+    if (day <= 18) return "Count down from 1000, decreasing by 13 each time (1000, 987, 974...).";
+    if (day <= 24) return "Count down: 1000, decreasing by 1 to 5 sequentially (1000, 999, 997, 994,990,985) then repeat decreasing again from 1 to 5 (984,982,979...)";
+    if (day <= 30) return "Count down: 1000, decreasing by 1 to 10 sequentially (1000, 999, 997, 994...).";
+
+    
+    return "FINAL CHALLENGE: Subtract any random number between 1 and 15 after every breath.";
+  }
+
+  String _getFourthExerciseTitle() {
+    if (_completedDaysCount < 7) return "Somatic tracking";
+    if (_completedDaysCount < 14) return "Labeling";
+    return "Imagination Training";
+  }
+
+  String _getFourthExerciseInstructions() {
+    if (_completedDaysCount < 7) {
+      return 'Focus on your physical sensation for 5 minutes.you observe the sensation without judgement,telling yourself "This is just a sensation".';
+    }
+    if (_completedDaysCount < 14) {
+      return "Focus on your mental imagery and hold the vision clearly for 5 minutes.Label them whether it is a fear,anger,affection,kindness or is it a good or bad Thought.";
+    }
+    return _getImaginationInstructions();
+  }
+
+  String _getImaginationInstructions() {
+    int day = _completedDaysCount + 1;
+
+    if (day <= 2) return "Imagine you are successful in your future. You have earned everything you ever wanted. Feel the pride.";
+    if (day <= 4) return "Visualize your future life: Honestly imagine both the good and bad things that could happen.";
+    if (day <= 6) return "Close your eyes and visualize yourself waking up early tomorrow and doing pushups. See every movement.";
+    if (day <= 16) return "As you imagined in the previous days from today onwards wake up early morning and do pushups for 5 minutes.";
+    if (day <= 20) return "Imagine a favorite item you love. Practice making your mindset strong enough to say 'no' to it.";
+
+    return "From today onwards start working hard to achieve all your future goals as it is.Plan your day effectively within this 5 minutes and work according to it";
+
+    // Default for later days
+    //return "Focus on your mental imagery and hold the vision clearly for 5 minutes.";
+  }
+
+}

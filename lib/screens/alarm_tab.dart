@@ -44,14 +44,18 @@ class _AlarmTabState extends State<AlarmTab> {
         centerTitle: true,
         title: Text(
           headerText,
-          style: const TextStyle(color: Colors.black, fontSize: 22, fontWeight: FontWeight.w400),
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+            fontSize: 22,
+            fontWeight: FontWeight.w400,
+          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.black, size: 28),
+            icon: Icon(Icons.add, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, size: 28),
             onPressed: () => _pickTime(context),
           ),
-          const Icon(Icons.more_vert, color: Colors.black),
+          Icon(Icons.more_vert, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
           const SizedBox(width: 10),
         ],
       ),

@@ -62,10 +62,15 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFF),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFF8FAFF),
       appBar: AppBar(
-          title: const Text("Running Session"),
-          backgroundColor: const Color(0xFFE8FAFF),
+          title: Text(
+            "Running Session",
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+            ),
+          ),
+          backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFE8FAFF),
       ),
       body: Padding(
         padding: const EdgeInsets.all(25.0),

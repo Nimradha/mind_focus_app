@@ -19,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 30.0),
@@ -36,9 +36,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 30),
               // 3. Welcome Text
-              const Text("Boost your brain today!",
+              Text(
+                  "Boost your brain today!",
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+                  )),
               const Text("Train your memory and focus with daily challenges.",
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey, fontSize: 16)),
@@ -97,11 +102,12 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextField(
       controller: controller,
       obscureText: isPassword,
+      style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey.shade500),
         filled: true,
-        fillColor: Colors.blueGrey[50],
+        fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[850] : Colors.blueGrey[50],
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
       ),
     );

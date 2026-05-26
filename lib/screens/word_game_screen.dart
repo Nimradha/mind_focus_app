@@ -1,6 +1,15 @@
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+  int _daysSinceCreation() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.metadata.creationTime != null) {
+      return DateTime.now().difference(user.metadata.creationTime!).inDays;
+    }
+    return 0;
+  }
 
 class MemoryWord {
   final String text;
@@ -41,24 +50,28 @@ class _WordGameScreenState extends State<WordGameScreen> {
   late int _secondsLeft;
 
   int get wordsToDisplay {
-    if (widget.completedDaysCount < 7) return 1;
-    if (widget.completedDaysCount < 14) return 2;
-    if (widget.completedDaysCount < 21) return 3;
+    final days = _daysSinceCreation();
+    if (days < 2) return 1;
+    if (days < 7) return 2;
+    if (days < 14) return 3;
     return 4;
   }
 
   int get displayDurationSeconds {
-    if (widget.completedDaysCount < 7) return 2;
-    if (widget.completedDaysCount < 14) return 4;
-    return 5;
+    final days = _daysSinceCreation();
+    if (days < 2) return 2;
+    if (days < 7) return 4;
+    if (days < 14) return 5;
+    return 6;
   }
 
   @override
   void initState() {
     super.initState();
-    if (widget.completedDaysCount < 7) {
+    final days = _daysSinceCreation();
+    if (days < 7) {
       _secondsLeft = 120; // 2 minutes
-    } else if (widget.completedDaysCount < 14) {
+    } else if (days < 14) {
       _secondsLeft = 240; // 4 minutes
     } else {
       _secondsLeft = 300; // 5 minutes
@@ -153,11 +166,16 @@ class _WordGameScreenState extends State<WordGameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFF),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFF8FAFF),
       appBar: AppBar(
-        title: Text("Time Left: $_secondsLeft s"),
+        title: Text(
+          "Time Left: $_secondsLeft s",
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+          ),
+        ),
         centerTitle: true,
-        backgroundColor: const Color(0xFFE8FAFF),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFF8FAFF),
       ),
       body: Center(child: _buildGameContent()),
     );

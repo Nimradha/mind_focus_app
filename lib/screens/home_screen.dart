@@ -166,15 +166,15 @@ class _HomeScreenState extends State<HomeScreen> {
       Exercise(
         title: "Word Memory Game",
         subtitle: "Cognitive Speed",
-        instructions: _completedDaysCount < 7
+        instructions: _daysSinceCreation() < 2
             ? "1 word is displayed for 2 second. Next a question is asked related to that word.Select your answer out of 4 choices."
-            : _completedDaysCount < 14
-            ? "2 words are displayed for 4 seconds. Next 2 questions are asked.Select your answer."
-            : _completedDaysCount < 21
-            ? "3 words are displayed for  5 seconds. Next 3 questions are asked.Select your answer."
-            : "4 words are displayed for  5 seconds. Next 4 questions are asked.Select your answer.",
+            : _daysSinceCreation() < 7
+                ? "2 words are displayed for 4 seconds. Next 2 questions are asked.Select your answer."
+                : _daysSinceCreation() < 14
+                    ? "3 words are displayed for 5 seconds. Next 3 questions are asked.Select your answer."
+                    : "4 words are displayed for 6 seconds. Next 4 questions are asked.Select your answer.",
         imagePath: "assets/images/memory.png",
-        duration: _completedDaysCount < 7 ? "2 Mins" : _completedDaysCount < 14 ? "4 Mins" : "5 Mins",
+        duration: _daysSinceCreation() < 7 ? "2 Mins" : _daysSinceCreation() < 14 ? "4 Mins" : "5 Mins",
         completionMessage: "Memory sharpened! 🧠",
         isEnabled: isBefore6PM,
         disabledText: isBefore6PM ? null : "To be done before 6pm",
@@ -195,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
         subtitle: "Cardio & Focus",
         instructions: _getRunningInstructions(),
         imagePath: "assets/images/run.png",
-        duration: _completedDaysCount < 15 ? "5 Mins" : "10 Mins",
+        duration: _daysSinceCreation() < 14 ? "5 Mins" : "10 Mins",
         completionMessage: "Endorphins released! 🏃‍♂️",
         isEnabled: isBefore6PM,
         disabledText: isBefore6PM ? null : "To be done before 6pm",
@@ -741,11 +741,20 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Returns the number of days since the user account was created.
+  int _daysSinceCreation() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.metadata.creationTime != null) {
+      return DateTime.now().difference(user.metadata.creationTime!).inDays;
+    }
+    return 0;
+  }
+
   int _getMeditationDurationMinutes() {
-    if (_completedDaysCount < 7) return 5;
-    if (_completedDaysCount < 14) return 10;
-    if (_completedDaysCount < 21) return 15;
-    return 20;
+    int days = _daysSinceCreation();
+    if (days < 7) return 5;
+    if (days < 14) return 10;
+    return 15;
   }
 
   String _getMeditationInstructions() {
@@ -754,7 +763,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _getRunningInstructions() {
-    int day = _completedDaysCount + 1;
+    int day = _daysSinceCreation() + 1;
 
     // --- 5 MINUTE SESSIONS (Days 1 - 15) ---
     if (day <= 3) return "Count down from 500, decreasing by 3 each time (500, 497, 494...).";
@@ -771,8 +780,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _getFourthExerciseTitle() {
-    if (_completedDaysCount < 7) return "Somatic tracking";
-    if (_completedDaysCount < 14) return "Labeling";
+    final user = FirebaseAuth.instance.currentUser;
+    int days = 0;
+    if (user != null && user.metadata.creationTime != null) {
+      days = DateTime.now().difference(user.metadata.creationTime!).inDays;
+    }
+    if (days < 7) return "Somatic tracking";
+    if (days < 14) return "Labeling";
     return "Imagination Training";
   }
 
@@ -791,14 +805,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (day <= 2) return "Imagine you are successful in your future. You have earned everything you ever wanted. Feel the pride.";
     if (day <= 4) return "Visualize your future life: Honestly imagine both the good and bad things that could happen.";
-    if (day <= 6) return "Close your eyes and visualize yourself waking up early tomorrow and doing pushups. See every movement.";
-    if (day <= 16) return "As you imagined in the previous days from today onwards wake up early morning and do pushups for 5 minutes.";
-    if (day <= 20) return "Imagine a favorite item you love. Practice making your mindset strong enough to say 'no' to it.";
-
+    if (day <= 7) return "Close your eyes and visualize yourself waking up early tomorrow and doing pushups. See every movement.";
+    if (day <= 14) return "As you imagined in the previous days from today onwards wake up early morning and do pushups for 5 minutes.";
+    if (day <= 21) return "Imagine a favorite item you love. Practice making your mindset strong enough to say 'no' to it.";
     return "From today onwards start working hard to achieve all your future goals as it is.Plan your day effectively within this 5 minutes and work according to it";
-
-    // Default for later days
-    //return "Focus on your mental imagery and hold the vision clearly for 5 minutes.";
   }
 
 }

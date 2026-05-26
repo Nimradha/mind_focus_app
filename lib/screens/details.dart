@@ -10,12 +10,12 @@ class TaskDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("Task Details"),
         elevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
+        foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -46,7 +46,7 @@ class TaskDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 25),
 
-            _buildInstructionsCard(exercise.instructions),
+            _buildInstructionsCard(exercise.instructions, context),
             const SizedBox(height: 25),
 
             Row(
@@ -97,11 +97,11 @@ class TaskDetailScreen extends StatelessWidget {
   }
 
   // Instructions Card Widget
-  Widget _buildInstructionsCard(String text) {
+  Widget _buildInstructionsCard(String text, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[850] : Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)

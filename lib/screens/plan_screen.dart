@@ -114,7 +114,14 @@ class _PlanScreenState extends State<PlanScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("NEWRA", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
+            Text(
+              "NEWRA",
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
             Text("Elevate your focus", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
           ],
         ),

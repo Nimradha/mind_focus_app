@@ -12,8 +12,23 @@ class PlanScreen extends StatefulWidget {
 }
 
 class _PlanScreenState extends State<PlanScreen> {
+  late TextEditingController _amountController;
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController();
+    _loadChallengeState();
+  }
+
+
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
   Map<int, bool> _dayTasksDone = {};
-  // 1. Add this variable to track the active tab
+  Map<String, bool> _challengeChecked = {};
 
   List<DateTime> _generateCurrentWeek() {
     DateTime now = DateTime.now();
@@ -78,26 +93,487 @@ class _PlanScreenState extends State<PlanScreen> {
 
   List<Widget> _buildDailyTasks() {
     switch (programDay) {
-      case 1: // Day 1
-      case 2: // Day 2
-        return [const Center(child: Text("No challenges for the first 2 days. Get ready!", style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)))];
-      case 3: // Day 3
-        return [_buildArticleTask("15 min social media delay", "Read the given article to improve focus")];
-      case 4: // Day 4
-        return [_buildSimpleDelayTask("Delay 5 minutes from taking your favorite food item", 2)];
-      case 5: // Day 5
-        return [
-          _buildSimpleDelayTask("Delay 5 minutes from taking your favorite food item", 2, showImage: true),
-          const SizedBox(height: 15),
-          _buildArticleTask("15 min social media delay", "Read the given article to improve focus"),
-        ];
-      case 6: // Day 6
-        return [_buildSimpleDelayTask("Delay 10 minutes from food & think of benefits", 2)];
-      case 7: // Day 7
-        return [_buildSavingsTask("Never buy the food that you feel to buy","Enter the amount you saved today")];
-      default:
-        return [const Center(child: Text("Rest Day - Keep your mindset sharp!", style: TextStyle(color: Colors.grey)))];
-    }
+        case 1: // Day 1
+        case 2: // Day 2
+          return [const Center(child: Text("No challenges for the first 2 days. Get ready!", style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)))];
+        case 3: // Day 3
+          return [_buildArticleTask("15 min social media delay", "Read the given article to improve focus")];
+        case 4: // Day 4
+          return [_buildSimpleDelayTask("Delay 5 minutes from taking your favorite food item", 2)];
+        case 5: // Day 5
+          return [
+            _buildSimpleDelayTask("Delay 5 minutes from taking your favorite food item", 2, showImage: true),
+            const SizedBox(height: 15),
+            _buildArticleTask("15 min social media delay", "Read the given article to improve focus"),
+          ];
+        case 6: // Day 6
+          return [_buildSimpleDelayTask("Delay 10 minutes from food & think of benefits", 2)];
+        case 7: // Day 7
+          return [_buildSavingsTask("Never buy the food that you feel to buy","Enter the amount you saved today")];
+          case 8: // Day 8
+            return [
+              // Meditation task without start button
+              _taskContainer(
+                title: "10 min meditation – focus on breathing",
+                sub: "Sit comfortably, close your eyes, and follow the breath.",
+                icon: Icons.self_improvement,
+                color: Colors.indigo,
+                 action: Checkbox(
+                      value: _challengeChecked['${programDay}_10 min meditation – focus on breathing'] ?? false,
+                      onChanged: (val) {
+                        if (val == true) {
+                          setState(() => _challengeChecked['${programDay}_10 min meditation – focus on breathing'] = val!);
+                          _saveChallengeState('${programDay}_10 min meditation – focus on breathing', val!);
+                          _updateMarks(2);
+                        }
+                      },
+                    ),
+              ),
+              Divider(
+                 height: 1,
+                 thickness: 1,
+                 color: Colors.grey.shade300,
+               ),
+               const Padding(
+                 padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
+                 child: Align(
+                   alignment: Alignment.centerLeft,
+                   child: Text(
+                     "To be continued throughout the day",
+                     style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14),
+                   ),
+                 ),
+               ),
+               Container(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.orange.withOpacity(0.2),
+                        child: Icon(Icons.notifications, color: Colors.orange, size: 20),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Mind‑drift reminder",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const Text(
+                              "Whenever you notice thoughts wandering, gently bring attention back to the present moment.",
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ];
+          case 9: // Day 9 
+            return [_buildArticleTask("30 min social media delay", "Read the given article to improve focus")];
+          case 10: // Day 10 
+            return [
+              _buildSimpleDelayTask("10 min food delay – Evaluate the cost and health value of reducing food consumption", 2),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: Colors.grey.shade300,
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "To be continued throughout the day",
+                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+              ),
+              _buildReminderTask("No social media scrolling at all", ""),
+            ];
+          case 11: // Day 11 
+            return [
+              _buildMeditationTask("10 min meditation – focus on breathing", "Sit comfortably, close your eyes, and follow the breath."),
+            ];
+          case 12: // Day 12
+            return [
+              _buildSimpleDelayTask("20 min food delay", 2),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: Colors.grey.shade300,
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "To be continued throughout the day",
+                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+              ),
+              _buildSavingsTask("No external food day", "Enter the amount you saved today"),
+            ];
+          case 13: // Day 13
+          return [_buildArticleTask("30 min social media delay", "Read the given article to improve focus")];
+          case 14: // Day 14
+              return [
+                // First reminder without button
+                Container(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.orange.withOpacity(0.2),
+                        child: Icon(Icons.notifications, color: Colors.orange, size: 20),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              "Sudden urge pause",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              "Whenever you feel a sudden urge that distracts your feelings, just stop and pause it before you actually do it.",
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Checkbox(
+                        value: _challengeChecked['${programDay}_Sudden urge pause'] ?? false,
+                        onChanged: (val) {
+                          if (val == true) {
+                            setState(() => _challengeChecked['${programDay}_Sudden urge pause'] = val!);
+                            _saveChallengeState('${programDay}_Sudden urge pause', val!);
+                            _updateMarks(2);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Colors.grey.shade300,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "To be continued throughout the day",
+                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+                ),
+                // Second reminder with bracket note
+                Container(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.orange.withOpacity(0.2),
+                        child: Icon(Icons.notifications, color: Colors.orange, size: 20),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "3‑minute pause",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const Text(
+                              "Whenever you feel something that distracts your feelings, pause 3 min before acting.",
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox.shrink(),
+                    ],
+                  ),
+                ),
+              ];
+            case 15: // Day 15
+              return [
+                _buildMeditationTask("10 min meditation", "Sit comfortably, close your eyes, and follow the breath."),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Colors.grey.shade300,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "To be continued throughout the day",
+                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+                ),
+                _taskContainer(
+                  title: "No social media scrolling at all",
+                  sub: "",
+                  icon: Icons.notifications,
+                  color: Colors.orange,
+                  action: const SizedBox.shrink(),
+                ),
+              ];
+            case 16: // Day 16
+              return [
+                _buildSimpleDelayTask("30 min food delay – Evaluate the cost and health value of reducing food consumption", 2),
+              ];
+            case 17: // Day 17
+              return [
+                _buildArticleTask("45 min social media delay", "Read the given article to improve focus"),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Colors.grey.shade300,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "To be continued throughout the day",
+                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+                ),
+                        _taskContainer(
+          title: "No external food day",
+          sub: "",
+          icon: Icons.notifications,
+          color: Colors.orange,
+          action: const SizedBox.shrink(),
+        ),
+              ];
+            case 18: // Day 18
+              return [
+                _buildMeditationTask("10 min meditation", "Sit comfortably, close your eyes, and follow the breath."),
+              ];
+            case 19: // Day 19
+              return [
+                _buildSimpleDelayTask("Morning phone ban - no phone for 1st 30 min after waking", 2),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Colors.grey.shade300,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "To be continued throughout the day",
+                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+                ),
+                _buildReminderTask("Call out cravings", "When a craving hits you, call it out by its real name – either say it out louder or write it down on a piece of paper."),
+              ];
+            case 20: // Day 20
+              return [
+                _buildReminderTask("3‑minute pause","Whenever you feel something that distracts your feelings - name it, pause 3 min before acting."),
+              ];
+            case 21: // Day 21
+              return [
+                _buildArticleTask("45 min social media delay", "Read the given article to improve focus"),
+              ];
+            case 22: // Day 22
+              return [
+                _buildMeditationTask("15 min meditation", "Sit comfortably, close your eyes, and follow the breath."),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Colors.grey.shade300,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "To be continued throughout the day",
+                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+                ),
+                _taskContainer(
+                  title: "No social media scrolling at all",
+                  sub: "",
+                  icon: Icons.notifications,
+                  color: Colors.orange,
+                  action: const SizedBox.shrink(),
+                ),
+              ];
+            case 23: // Day 23
+              return [
+                _buildSimpleDelayTask("Morning phone ban - no phone for 1 hour after waking", 2),
+              ];
+            case 24: // Day 24
+              return [
+                _buildSimpleDelayTask("1 hour food delay – Evaluate identity : does this serve who I want to become?", 2),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Colors.grey.shade300,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "To be continued throughout the day",
+                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+                ),
+                                        _taskContainer(
+                          title: "No external food day",
+                          sub: "",
+                          icon: Icons.notifications,
+                          color: Colors.orange,
+                          action: const SizedBox.shrink(),
+                        ),
+              ];
+            case 25: // Day 25
+              return [
+                _buildMeditationTask("15 min meditation", "Sit comfortably, close your eyes, and follow the breath."),
+              ];
+            case 26: // Day 26
+              return [
+                _buildReminderTask("Call out cravings", "When a craving hits you, call it out by its real name – either say it out louder or write it down on a piece of paper."),
+              ];
+            case 27: // Day 27
+              return [
+                _buildReminderTask("Identify your hardest distraction", "Pick the one distraction that is hardest for you to resist today, and make a rule that you must wait before giving in to it."),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Colors.grey.shade300,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "To be continued throughout the day",
+                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+                ),
+                _taskContainer(
+  title: "Decide your wait time",
+  sub: "You get to decide the rules today. Pick the exact number of minutes you will force yourself to wait the next time you feel a sudden urge to distract yourself.",
+  icon: Icons.notifications,
+  color: Colors.orange,
+  action: const SizedBox.shrink(),
+),
+              ];
+            case 28: // Day 28
+              return [
+                _buildMeditationTask("15 min meditation", "Sit comfortably, close your eyes, and follow the breath."),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Colors.grey.shade300,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 10.0, bottom: 5.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "To be continued throughout the day",
+                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+                ),
+                _buildReminderTask("Be your own coach", "Spot your biggest personal weakness from the past few weeks, and design a custom challenge today to fix that specific problem."),
+              ];
+            case 29: // Day 29
+              return [
+                _taskContainer(
+                  title: "Attention audit",
+                  sub: "Once an hour, write down your exact thought. At the end of the day, check if your mind spent its time on things you chose, or if it just reacted to whatever popped up in front of you.",
+                  icon: Icons.notifications,
+                  color: Colors.orange,
+                  action: const SizedBox.shrink(),
+                ),
+              ];
+            case 30: // Day 30
+              return [
+                _taskContainer(
+                  title: "Month reflection",
+                  sub: "Think answers for the following questions. What changed? What didn't? What surprised me? What do I continue? Who am I vs day 1?",
+                  icon: Icons.notes,
+                  color: Colors.blue,
+                  action: const SizedBox.shrink(),
+                ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Colors.grey.shade300,
+                ),
+                _taskContainer(
+                  title: "Full dopamine audit",
+                  sub: "List top 5 dopamine sources.",
+                  icon: Icons.bolt,
+                  color: Colors.purple,
+                  action: const SizedBox.shrink(),
+                ),
+              ];
+            default:
+              return [const Center(child: Text("Rest Day - Keep your mindset sharp!", style: TextStyle(color: Colors.grey)))];
+      }
   }
 
   // --- UI Components ---
@@ -194,20 +670,28 @@ class _PlanScreenState extends State<PlanScreen> {
   }
 
   Widget _buildArticleTask(String title, String sub) {
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
     return _taskContainer(
       title: title,
       sub: sub,
       icon: Icons.article,
       color: Colors.purple,
-      action: ElevatedButton(
-        onPressed: () => _openArticleAndQuiz(),
-        child: const Text("Start"),
+      action: Checkbox(
+        value: isChecked,
+        onChanged: (val) {
+          if (val == true) {
+            setState(() => _challengeChecked['${programDay}_$title'] = val!);
+            _saveChallengeState('${programDay}_$title', val!);
+            _updateMarks(2);
+            _openArticleAndQuiz();
+          }
+        },
       ),
     );
   }
 
   Widget _buildSimpleDelayTask(String title, int marks, {bool showImage = false}) {
-    bool isChecked = _dayTasksDone[programDay] ?? false; // Sync this with a local variable or DB
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
     return _taskContainer(
       title: title,
       sub: "Mental Discipline",
@@ -217,7 +701,8 @@ class _PlanScreenState extends State<PlanScreen> {
         value: isChecked,
         onChanged: (val) {
           if (val == true) {
-            setState(() => _dayTasksDone[programDay] = val!);
+            setState(() => _challengeChecked['${programDay}_$title'] = val!);
+            _saveChallengeState('${programDay}_$title', val!);
             _updateMarks(marks);
             if (showImage) _showAchievementImage();
           }
@@ -237,7 +722,7 @@ class _PlanScreenState extends State<PlanScreen> {
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -306,7 +791,7 @@ class _PlanScreenState extends State<PlanScreen> {
   }
 
   Widget _buildSavingsTask(String title, String sub) {
-    final TextEditingController _amountController = TextEditingController();
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
     return Column(
       children: [
         _taskContainer(
@@ -314,9 +799,27 @@ class _PlanScreenState extends State<PlanScreen> {
           sub: sub,
           icon: Icons.savings,
           color: Colors.purple,
-          action: IconButton(icon: const Icon(Icons.add_circle), onPressed: () {
-            setState(() => _showAmountInput = true);
-          }),
+          action: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Checkbox(
+                value: isChecked,
+                onChanged: (val) {
+                  if (val == true) {
+                    setState(() => _challengeChecked['${programDay}_$title'] = val!);
+                    _saveChallengeState('${programDay}_$title', val!);
+                    _updateMarks(2);
+                  }
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.add_circle),
+                onPressed: () {
+                  setState(() => _showAmountInput = true);
+                },
+              ),
+            ],
+          ),
         ),
         if (_showAmountInput)
           Padding(
@@ -337,12 +840,100 @@ class _PlanScreenState extends State<PlanScreen> {
     );
   }
 
-  void _updateMarks(int points) async {
+    // Meditation task widget
+  Widget _buildMeditationTask(String title, String sub) {
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
+    return _taskContainer(
+      title: title,
+      sub: sub,
+      icon: Icons.self_improvement,
+      color: Colors.indigo,
+      action: Checkbox(
+        value: isChecked,
+        onChanged: (val) {
+          if (val == true) {
+            setState(() => _challengeChecked['${programDay}_$title'] = val!);
+            _saveChallengeState('${programDay}_$title', val!);
+            _updateMarks(2);
+          }
+        },
+      ),
+    );
+  }
+
+  // Reminder task widget with optional bracketed red text
+  Widget _buildReminderTask(String title, String sub, {bool showBracket = false}) {
+    int marks = showBracket ? 3 : 2;
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
+    return Column(
+      children: [
+        _taskContainer(
+          title: title,
+          sub: sub,
+          icon: Icons.notifications,
+          color: Colors.orange,
+          action: Checkbox(
+            value: isChecked,
+            onChanged: (val) {
+              if (val == true) {
+                setState(() => _challengeChecked['${programDay}_$title'] = val!);
+                _saveChallengeState('${programDay}_$title', val!);
+                _updateMarks(marks);
+              }
+            },
+          ),
+        ),
+        if (showBracket) ...[
+          const SizedBox(height: 8),
+          RichText(
+            text: const TextSpan(
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+              children: [
+                TextSpan(text: 'continue this throughout the day', style: TextStyle(color: Colors.red)),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+void _updateMarks(int points) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'totalMarks': FieldValue.increment(points),
         'lastActiveDate': DateTime.now().toString().split(' ')[0],
+      }, SetOptions(merge: true));
+    }
+  }
+
+  Future<void> _loadChallengeState() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final today = DateTime.now().toString().split(' ')[0];
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null && data['lastActiveDate'] == today && data.containsKey('challengeStates')) {
+          final Map<String, dynamic> saved = Map<String, dynamic>.from(data['challengeStates']);
+          setState(() {
+            _challengeChecked = saved.map((k, v) => MapEntry(k, v as bool));
+          });
+        } else {
+          setState(() => _challengeChecked = {});
+        }
+      }
+    }
+  }
+
+  Future<void> _saveChallengeState(String key, bool value) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final today = DateTime.now().toString().split(' ')[0];
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'challengeStates': {key: value},
+        'lastActiveDate': today,
       }, SetOptions(merge: true));
     }
   }
@@ -373,6 +964,8 @@ class _PlanScreenState extends State<PlanScreen> {
     }
   }
 
+// Deprecated reminder task removed; use _buildReminderTask instead.
+
 
 
   Widget _buildTaskHeader() {
@@ -383,7 +976,7 @@ class _PlanScreenState extends State<PlanScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(color: Colors.green.withOpacity(0.09), borderRadius: BorderRadius.circular(20)),
-          child: const Text("3 left", style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
+          
         ),
       ],
     );
@@ -396,7 +989,7 @@ class _PlanScreenState extends State<PlanScreen> {
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: isDone ? Border.all(color: Colors.grey.shade200, style: BorderStyle.solid) : null,
         ),
@@ -415,10 +1008,15 @@ class _PlanScreenState extends State<PlanScreen> {
             ),
             isDone
                 ? const Text("Done", style: TextStyle(color: Colors.grey))
-                : ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green, elevation: 0, shape: const StadiumBorder()),
-              child: const Text("Set Time", style: TextStyle(color: Colors.white, fontSize: 12)),
+                : Checkbox(
+              value: _challengeChecked['${programDay}_$title'] ?? false,
+              onChanged: (val) {
+                if (val == true) {
+                  setState(() => _challengeChecked['${programDay}_$title'] = val!);
+                  _saveChallengeState('${programDay}_$title', val!);
+                  _updateMarks(2);
+                }
+              },
             ),
           ],
         ),

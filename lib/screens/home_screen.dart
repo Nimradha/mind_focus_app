@@ -406,6 +406,15 @@ class _HomeScreenState extends State<HomeScreen> {
     // Truncate long display names to first 5 characters with ellipsis
     String shortDisplayName = displayName.length > 5 ? '${displayName.substring(0,5)}...' : displayName;
     DateTime now = DateTime.now();
+    int hour = now.hour;
+    String greeting;
+    if (hour >= 12 && hour < 17) {
+      greeting = "Good afternoon";
+    } else if (hour >= 17) {
+      greeting = "Good evening";
+    } else {
+      greeting = "Good morning";
+    }
     List<String> months = [
       "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
       "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
@@ -423,21 +432,10 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(formattedDate, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-            Text("Good morning, $shortDisplayName!",
+            Text("$greeting, $shortDisplayName!",
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           ],
         ),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-          ),
-          child: Icon(Icons.notifications_none, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
-
-        )
       ],
     );
   }

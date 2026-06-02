@@ -73,9 +73,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Text("Login", style: TextStyle(color: Colors.green))
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               const Text("Or continue with", style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 20),
+              const SizedBox(height: 5),
 
               // 6. Social Icons
               Row(
@@ -99,16 +99,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // Helper UI methods to keep code clean
   Widget _buildTextField(String hint, TextEditingController controller, bool isPassword) {
-    return TextField(
-      controller: controller,
-      obscureText: isPassword,
-      style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey.shade500),
-        filled: true,
-        fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[850] : Colors.blueGrey[50],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+    return SizedBox(
+      height: 50,
+      child: TextField(
+        controller: controller,
+        obscureText: isPassword,
+        style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.grey.shade500),
+          filled: true,
+          fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[850] : Colors.blueGrey[50],
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+        ),
       ),
     );
   }

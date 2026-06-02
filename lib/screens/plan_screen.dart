@@ -204,7 +204,13 @@ class _PlanScreenState extends State<PlanScreen> {
                   ),
                 ),
               ),
-              _buildReminderTask("No social media scrolling at all", ""),
+            _taskContainer(
+              title: "No social media scrolling at all",
+              sub: "",
+              icon: Icons.notifications,
+              color: Colors.orange,
+              action: const SizedBox.shrink(),
+            ),
             ];
           case 11: // Day 11 
             return [

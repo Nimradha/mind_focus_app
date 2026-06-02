@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 // Replace 'home_screen.dart' with the actual filename of your home screen
 import 'home_screen.dart';
+import 'meditation_timer_screen.dart';
 
 class TaskDetailScreen extends StatelessWidget {
   final Exercise exercise;
@@ -58,8 +59,15 @@ class TaskDetailScreen extends StatelessWidget {
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
-                // TODO: Add logic to open the actual game or timer here
-                exercise.onStart();
+                // Navigate to the dedicated meditation timer screen
+                final minutesMatch = RegExp(r'(\d+)').firstMatch(exercise.duration);
+                final minutes = minutesMatch != null ? int.parse(minutesMatch.group(0)!) : 0;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MeditationTimerScreen(minutes: minutes),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0x880D41A1), // Deep Blue color

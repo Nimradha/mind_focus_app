@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 
 class RunningTimerScreen extends StatefulWidget {
   final int completedDaysCount;
-  const RunningTimerScreen({super.key, required this.completedDaysCount});
+  // New optional parameters to customize timer
+  final int? minutes; // duration in minutes (overrides default based on completedDaysCount)
+  final String? instruction; // custom instruction text for the exercise
+
+  const RunningTimerScreen({super.key, required this.completedDaysCount, this.minutes, this.instruction});
 
   @override
   State<RunningTimerScreen> createState() => _RunningTimerScreenState();
@@ -17,8 +21,13 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
   @override
   void initState() {
     super.initState();
-    // 1st 15 days = 5 mins (300s), next 15 days = 10 mins (600s)
-    _secondsRemaining = widget.completedDaysCount < 15 ? 300 : 600;
+    // Use provided minutes if available, otherwise fallback to default logic
+    if (widget.minutes != null) {
+      _secondsRemaining = widget.minutes! * 60;
+    } else {
+      // 1st 15 days = 5 mins (300s), next 15 days = 10 mins (600s)
+      _secondsRemaining = widget.completedDaysCount < 15 ? 300 : 600;
+    }
     _startTimer();
   }
 
@@ -34,24 +43,23 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
   }
 
   String _getInstruction() {
-    int day = widget.completedDaysCount + 1; // 1-based day
-
-    // --- 5 MINUTE PHASES (Days 1 - 15) ---
-    if (day <= 3) return "Count down from 1000, decreasing by 3 each time (1000, 997, 994...).";
-    if (day <= 6) return "Count down from 1000, decreasing by 7 each time (1000, 993, 986...).";
-    if (day <= 9) return "Count down from 1000, decreasing by 13 each time (1000, 987, 974...).";
-    if (day <= 12) return "Count down: 1000, decreasing by 1 to 5 sequentially (1000, 999, 997, 994, 990, 985) then repeat decreasing again from 1 to 5 (984,982,979...)";
-    if (day <= 15) return "Count down: 1000, decreasing by 1 to 10 sequentially (1000, 999, 997, 994...).";
-
-    // --- 10 MINUTE PHASES (Days 16 - 30) ---
-    if (day <= 18) return "10 MIN RUN: Count down from 1000, decreasing by 17 each time.";
-    if (day <= 21) return "10 MIN RUN: Count down using prime numbers (Decrease by 2, 3, 5, 7, 11, then repeat).";
-    if (day <= 24) return "10 MIN RUN: Alternate subtractions: -20, then -2, then -20, then -2 (1000, 980, 978...).";
-    if (day <= 27) return "10 MIN RUN: Subtract even numbers only (1000, -2, -4, -6, -8, -10... up to -20 then repeat).";
-
-    // Phase 10: The Final Challenge
-    return "FINAL CHALLENGE: Subtract any random number between 1 and 15 after every breath.";
+  // If a custom instruction was passed, use it directly
+  if (widget.instruction != null && widget.instruction!.isNotEmpty) {
+    return widget.instruction!;
   }
+  // Use the same instruction set as defined in HomeScreen
+  int day = widget.completedDaysCount + 1;
+  // --- 5 MINUTE SESSIONS (Days 1 - 15) ---
+  if (day <= 3) return "Count down from 500, decreasing by 3 each time (500, 497, 494...).";
+  if (day <= 6) return "Count down from 500, decreasing by 7 each time (500, 493, 486...).";
+  if (day <= 9) return "Count down from 500, decreasing by 13 each time (500, 487, 474...).";
+  if (day <= 12) return "Count down from 1000, decreasing by 3 each time (1000, 997, 994...).";
+  if (day <= 15) return "Count down from 1000, decreasing by 7 each time (1000, 993, 986...).";
+  if (day <= 18) return "Count down from 1000, decreasing by 13 each time (1000, 987, 974...).";
+  if (day <= 24) return "Count down: 1000, decreasing by 1 to 5 sequentially (1000, 999, 997, 994,990,985) then repeat decreasing again from 1 to 5 (984,982,979...)";
+  if (day <= 30) return "Count down: 1000, decreasing by 1 to 10 sequentially (1000, 999, 997, 994...).";
+  return "FINAL CHALLENGE: Subtract any random number between 1 and 15 after every breath.";
+}
 
   String _formatTime(int seconds) {
     int mins = seconds ~/ 60;
@@ -121,8 +129,8 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context, true); // Return to home with 'true' to mark done
+              Navigator.pop(context);
+              Navigator.pop(context, true);
             },
             child: const Text("FINISH"),
           ),
@@ -136,4 +144,5 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
     _timer?.cancel();
     super.dispose();
   }
+
 }

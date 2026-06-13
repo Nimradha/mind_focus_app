@@ -234,7 +234,37 @@ class _PlanScreenState extends State<PlanScreen> {
                   ),
                 ),
               ),
-              _buildSavingsTask("No external food day", "Enter the amount you saved today"),
+Column(
+  children: [
+    _taskContainer(
+      title: "No external food day",
+      sub: "Enter the amount you saved today",
+      icon: Icons.savings,
+      color: Colors.purple,
+      action: IconButton(
+        icon: const Icon(Icons.add_circle),
+        onPressed: () {
+          setState(() => _showAmountInput = true);
+        },
+      ),
+    ),
+    if (_showAmountInput)
+      Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: TextField(
+          controller: _amountController,
+          decoration: InputDecoration(
+            hintText: "Enter amount saved today",
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: () => _saveToDatabase(_amountController.text),
+            ),
+          ),
+          keyboardType: TextInputType.number,
+        ),
+      ),
+  ],
+),
             ];
           case 13: // Day 13
           return [_buildArticleTask("30 min social media delay", "Read the given article to improve focus")];
@@ -543,7 +573,13 @@ class _PlanScreenState extends State<PlanScreen> {
                     ),
                   ),
                 ),
-                _buildReminderTask("Be your own coach", "Spot your biggest personal weakness from the past few weeks, and design a custom challenge today to fix that specific problem."),
+                _taskContainer(
+                  title: "Be your own coach",
+                  sub: "Spot your biggest personal weakness from the past few weeks, and design a custom challenge today to fix that specific problem.",
+                  icon: Icons.notifications,
+                  color: Colors.orange,
+                  action: const SizedBox.shrink(),
+                ),
               ];
             case 29: // Day 29
               return [
@@ -947,11 +983,31 @@ void _updateMarks(int points) async {
   void _saveToDatabase(String amount) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'totalSaved': FieldValue.increment(double.parse(amount)),
-      }, SetOptions(merge: true));
+      // Validate that the amount is a valid number
+      final parsed = double.tryParse(amount.trim());
+      if (parsed == null) {
+        _showSuccessPopup("Please enter a valid number.");
+        return;
+      }
+      // Use update with FieldValue.increment to ensure proper aggregation
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+        'totalSaved': FieldValue.increment(parsed),
+      }).catchError((e) async {
+        // If the document doesn't exist yet, create it with set
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set({
+          'totalSaved': parsed,
+        }, SetOptions(merge: true));
+      });
       setState(() => _showAmountInput = false);
       _showSuccessPopup("Amount saved successfully!");
+      // Debug log
+      print('Saved amount $parsed to totalSaved for user ${user.uid}');
     }
   }
 

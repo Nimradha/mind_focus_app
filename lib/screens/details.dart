@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-// Replace 'home_screen.dart' with the actual filename of your home screen
+import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'meditation_timer_screen.dart';
+import 'word_game_screen.dart';
+import 'running_timer_screen.dart';
+
 
 class TaskDetailScreen extends StatelessWidget {
   final Exercise exercise;
@@ -58,17 +61,34 @@ class TaskDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: () {
-                // Navigate to the dedicated meditation timer screen
-                final minutesMatch = RegExp(r'(\d+)').firstMatch(exercise.duration);
-                final minutes = minutesMatch != null ? int.parse(minutesMatch.group(0)!) : 0;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MeditationTimerScreen(minutes: minutes),
-                  ),
-                );
-              },
+                onPressed: () async {
+                  final title = exercise.title.toLowerCase();
+                  Widget targetScreen;
+                  if (title.contains('word')) {
+                    targetScreen = const WordGameScreen(completedDaysCount: 0);
+                  } else if (title.contains('run')) {
+                    final minutesMatch = RegExp(r'(\d+)').firstMatch(exercise.duration);
+                    final minutes = minutesMatch != null ? int.parse(minutesMatch.group(0)!) : 0;
+                    targetScreen = RunningTimerScreen(
+                      completedDaysCount: 0,
+                      minutes: minutes,
+                      instruction: exercise.instructions,
+                    );
+                  } else {
+                    final minutesMatch = RegExp(r'(\d+)').firstMatch(exercise.duration);
+                    final minutes = minutesMatch != null ? int.parse(minutesMatch.group(0)!) : 0;
+                    targetScreen = MeditationTimerScreen(
+                      minutes: minutes,
+                    );
+                  }
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => targetScreen),
+                  );
+                  if (result == true) {
+                    Navigator.pop(context, true);
+                  }
+                },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0x880D41A1), // Deep Blue color
                 minimumSize: const Size(double.infinity, 55),

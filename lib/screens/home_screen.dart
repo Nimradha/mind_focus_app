@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'details.dart';
+import 'meditation_intro_screen.dart';
 import 'achievement_screen.dart';
 import 'package:audioplayers/audioplayers.dart' hide Source;
 import 'word_game_screen.dart';
@@ -50,6 +51,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // This lives inside the State class now
   List<bool> _isDoneList = [false, false, false, false];
   bool _isLoading = true;
+  bool _morningCongratsShown = false;
+  bool _eveningCongratsShown = false;
+  bool _allCongratsShown = false;
 
   @override
   void initState() {
@@ -115,6 +119,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 'eveningMeditationResetDate': today,
               }, SetOptions(merge: true));
             }
+
+            // Initialize the congratulations shown flags based on loaded state
+            _morningCongratsShown = _isDoneList.length >= 3 && _isDoneList[0] && _isDoneList[1] && _isDoneList[2];
+            _eveningCongratsShown = _isDoneList.length >= 4 && _isDoneList[0] && _isDoneList[3];
+            _allCongratsShown = _morningCongratsShown && _isDoneList[3];
             
             _isLoading = false;
 
@@ -257,18 +266,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _checkCompletion() async{
-    int doneCount = _isDoneList.where((item) => item).length;
-    bool isBefore6PM = DateTime.now().hour < 18;
+  void _checkCompletion() async {
+    bool morningCompleted = _isDoneList[0] && _isDoneList[1] && _isDoneList[2];
+    bool eveningCompleted = _isDoneList[0] && _isDoneList[3];
+    bool allCompleted = morningCompleted && _isDoneList[3];
 
-    // Trigger achievement when the first 3 morning tasks are done
-    if (doneCount == 3 && isBefore6PM) {
-      if (!mounted) return;
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const AchievementScreen()));
-      return; // Do not increment the day counter yet
-    }
+    // Reset congrats shown flags if user unchecks any task
+    if (!morningCompleted) _morningCongratsShown = false;
+    if (!eveningCompleted) _eveningCongratsShown = false;
+    if (!allCompleted) _allCongratsShown = false;
 
-    if (doneCount == _isDoneList.length) {
+    // Case 1: All tasks for the day are completed (either finished normally, or finished the morning carryover)
+    if (allCompleted) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         String today = DateTime.now().toString().split(' ')[0];
@@ -288,8 +297,52 @@ class _HomeScreenState extends State<HomeScreen> {
           debugPrint("Error updating completion: $e");
         }
       }
+      
+      if (!_allCongratsShown) {
+        _allCongratsShown = true;
+        _eveningCongratsShown = true;
+        _morningCongratsShown = true;
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AchievementScreen(
+              message: "You've reached your daily mindfulness goal.",
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Case 2: Only the morning tasks are completed (3 tasks before 6pm checked)
+    if (morningCompleted && !_morningCongratsShown) {
+      _morningCongratsShown = true;
       if (!mounted) return;
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const AchievementScreen()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AchievementScreen(
+            message: "You've successfully completed your Morning Tasks",
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Case 3: Only the evening tasks are completed (2 tasks after 6pm checked)
+    if (eveningCompleted && !_eveningCongratsShown) {
+      _eveningCongratsShown = true;
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AchievementScreen(
+            message: "You've reached your daily mindfulness goal.",
+          ),
+        ),
+      );
+      return;
     }
   }
 
@@ -524,9 +577,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // --- 4. Exercise Section ---
   Widget _buildExerciseSection(List<Exercise> exercises) {
+    bool isBefore6PM = DateTime.now().hour < 18;
+
+    // Determine which indices to show based on time of day:
+    // Exercises 0-2 (Meditation, Word Game, Running) are for before 6PM.
+    // Exercises 0 and 3 (Meditation + evening exercise) are for after 6PM.
+    List<int> visibleIndices = isBefore6PM
+        ? [0, 1, 2]   // Morning/afternoon: show first three
+        : [0, 3];     // Evening: show Meditation + the 6PM+ exercise
+
+    String heading = isBefore6PM
+        ? "Tasks to be done before 6 PM"
+        : "Tasks to be done after 6 PM";
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (int i = 0; i < exercises.length; i++)
+        Text(
+          heading,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isBefore6PM ? Colors.blue.shade700 : Colors.indigo.shade400,
+          ),
+        ),
+        const SizedBox(height: 12),
+        for (int i in visibleIndices)
           _exerciseTile(i, exercises[i]),
       ],
     );
@@ -620,9 +696,9 @@ class _HomeScreenState extends State<HomeScreen> {
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => TaskDetailScreen(
-                    exercise: exercise
-                  ),
+                  builder: (context) => exercise.title == "Meditation"
+                      ? MeditationIntroScreen(exercise: exercise)
+                      : TaskDetailScreen(exercise: exercise),
                 ),
               );
 

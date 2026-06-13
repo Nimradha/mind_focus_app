@@ -3,7 +3,8 @@ import 'package:confetti/confetti.dart';
 import 'dart:math';
 
 class AchievementScreen extends StatefulWidget {
-  const AchievementScreen({super.key});
+  final String message;
+  const AchievementScreen({super.key, required this.message});
 
   @override
   State<AchievementScreen> createState() => _AchievementScreenState();
@@ -56,9 +57,7 @@ class _AchievementScreenState extends State<AchievementScreen> {
                 const Text("Congratulations!", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF634205))),
                 const SizedBox(height: 10),
                 Text(
-                  DateTime.now().hour < 18 
-                      ? "You've successfully completed your Morning Tasks"
-                      : "You've reached your daily mindfulness goal.", 
+                  widget.message, 
                   textAlign: TextAlign.center, 
                   style: const TextStyle(fontSize: 16, color: Colors.grey)
                 ),

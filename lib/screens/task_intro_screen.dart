@@ -2,22 +2,34 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'details.dart';
 
-class MeditationIntroScreen extends StatefulWidget {
+class TaskIntroScreen extends StatefulWidget {
   final Exercise exercise;
 
-  const MeditationIntroScreen({super.key, required this.exercise});
+  const TaskIntroScreen({super.key, required this.exercise});
 
   @override
-  State<MeditationIntroScreen> createState() => _MeditationIntroScreenState();
+  State<TaskIntroScreen> createState() => _TaskIntroScreenState();
 }
 
-class _MeditationIntroScreenState extends State<MeditationIntroScreen> {
+class _TaskIntroScreenState extends State<TaskIntroScreen> {
   @override
   Widget build(BuildContext context) {
-    bool isBefore6PM = DateTime.now().hour < 18;
-    String imagePath = isBefore6PM 
-        ? "assets/images/med_morning.jpeg" 
-        : "assets/images/med_night.jpeg";
+    String imagePath;
+    String titleLower = widget.exercise.title.toLowerCase();
+    
+    if (widget.exercise.title == "Meditation") {
+      bool isBefore6PM = DateTime.now().hour < 18;
+      imagePath = isBefore6PM 
+          ? "assets/images/med_morning.jpeg" 
+          : "assets/images/med_night.jpeg";
+    } else if (titleLower.contains("word") || titleLower.contains("memory")) {
+      imagePath = "assets/images/word_mem.png";
+    } else if (titleLower.contains("run") || titleLower.contains("jog")) {
+      imagePath = "assets/images/running.png";
+    } else {
+      // 4th exercise (Somatic tracking, Labeling, Imagination Training, etc.)
+      imagePath = "assets/images/activity4.png";
+    }
 
     return Scaffold(
       body: Stack(
@@ -30,7 +42,7 @@ class _MeditationIntroScreenState extends State<MeditationIntroScreen> {
             ),
           ),
           
-          // 2. Dark/Light gradient at the bottom to ensure button legibility
+          // 2. Dark gradient at the bottom to ensure button legibility
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -64,7 +76,7 @@ class _MeditationIntroScreenState extends State<MeditationIntroScreen> {
             ),
           ),
 
-          // 4. Start Button at the bottom (Title & Subtitle removed)
+          // 4. Start Button at the bottom
           Positioned(
             bottom: 0,
             left: 0,
@@ -76,7 +88,6 @@ class _MeditationIntroScreenState extends State<MeditationIntroScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Start Button directs to details page (TaskDetailScreen)
                     ElevatedButton(
                       onPressed: () async {
                         final navigator = Navigator.of(context);
@@ -95,7 +106,7 @@ class _MeditationIntroScreenState extends State<MeditationIntroScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Colors.black,
-                        minimumSize: const Size(100,30),
+                        minimumSize: const Size(50,13),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),

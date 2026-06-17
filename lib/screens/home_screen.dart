@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'details.dart';
-import 'meditation_intro_screen.dart';
+import 'task_intro_screen.dart';
 import 'achievement_screen.dart';
 import 'package:audioplayers/audioplayers.dart' hide Source;
 import 'word_game_screen.dart';
@@ -338,7 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
         context,
         MaterialPageRoute(
           builder: (context) => const AchievementScreen(
-            message: "You've reached your daily mindfulness goal.",
+            message: "You've successfully completed your Evening Tasks",
           ),
         ),
       );
@@ -696,9 +696,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => exercise.title == "Meditation"
-                      ? MeditationIntroScreen(exercise: exercise)
-                      : TaskDetailScreen(exercise: exercise),
+                  builder: (context) => TaskIntroScreen(exercise: exercise),
                 ),
               );
 

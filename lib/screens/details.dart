@@ -1,15 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'meditation_timer_screen.dart';
 import 'word_game_screen.dart';
 import 'running_timer_screen.dart';
 
 
-class TaskDetailScreen extends StatelessWidget {
+class TaskDetailScreen extends StatefulWidget {
   final Exercise exercise;
 
   const TaskDetailScreen({super.key, required this.exercise});
+
+  @override
+  State<TaskDetailScreen> createState() => _TaskDetailScreenState();
+}
+
+class _TaskDetailScreenState extends State<TaskDetailScreen> {
+  bool _taskCompleted = false;
+
+  Future<void> _onStartPressed() async {
+    final title = widget.exercise.title.toLowerCase();
+    Widget targetScreen;
+    if (title.contains('word')) {
+      targetScreen = const WordGameScreen(completedDaysCount: 0);
+    } else if (title.contains('run')) {
+      final minutesMatch = RegExp(r'(\d+)').firstMatch(widget.exercise.duration);
+      final minutes = minutesMatch != null ? int.parse(minutesMatch.group(0)!) : 0;
+      targetScreen = RunningTimerScreen(
+        completedDaysCount: 0,
+        minutes: minutes,
+        instruction: widget.exercise.instructions,
+      );
+    } else {
+      final minutesMatch = RegExp(r'(\d+)').firstMatch(widget.exercise.duration);
+      final minutes = minutesMatch != null ? int.parse(minutesMatch.group(0)!) : 0;
+      targetScreen = MeditationTimerScreen(
+        minutes: minutes,
+      );
+    }
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => targetScreen),
+    );
+    if (result == true) {
+      // The timer/activity was fully completed — now reveal "Mark as Done"
+      setState(() {
+        _taskCompleted = true;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +65,7 @@ class TaskDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                exercise.title,
+                widget.exercise.title,
                 style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)
             ),
             const SizedBox(height: 20),
@@ -36,11 +74,10 @@ class TaskDetailScreen extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Image.asset(
-                exercise.imagePath,
+                widget.exercise.imagePath,
                 height: 200,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                // Optional: errorBuilder helps if an image path is wrong
                 errorBuilder: (context, error, stackTrace) => Container(
                   height: 200,
                   color: Colors.grey[300],
@@ -50,73 +87,66 @@ class TaskDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 25),
 
-            _buildInstructionsCard(exercise.instructions, context),
+            _buildInstructionsCard(widget.exercise.instructions, context),
             const SizedBox(height: 25),
 
             Row(
               children: [
-                _buildInfoTile(Icons.timer, "DURATION", exercise.duration),
-
+                _buildInfoTile(Icons.timer, "DURATION", widget.exercise.duration),
               ],
             ),
             const SizedBox(height: 40),
+
+            // Start button — always visible
             ElevatedButton(
-                onPressed: () async {
-                  final title = exercise.title.toLowerCase();
-                  Widget targetScreen;
-                  if (title.contains('word')) {
-                    targetScreen = const WordGameScreen(completedDaysCount: 0);
-                  } else if (title.contains('run')) {
-                    final minutesMatch = RegExp(r'(\d+)').firstMatch(exercise.duration);
-                    final minutes = minutesMatch != null ? int.parse(minutesMatch.group(0)!) : 0;
-                    targetScreen = RunningTimerScreen(
-                      completedDaysCount: 0,
-                      minutes: minutes,
-                      instruction: exercise.instructions,
-                    );
-                  } else {
-                    final minutesMatch = RegExp(r'(\d+)').firstMatch(exercise.duration);
-                    final minutes = minutesMatch != null ? int.parse(minutesMatch.group(0)!) : 0;
-                    targetScreen = MeditationTimerScreen(
-                      minutes: minutes,
-                    );
-                  }
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => targetScreen),
-                  );
-                  if (result == true) {
-                    Navigator.pop(context, true);
-                  }
-                },
+              onPressed: _taskCompleted ? null : _onStartPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0x880D41A1), // Deep Blue color
+                backgroundColor: _taskCompleted
+                    ? Colors.grey.shade400
+                    : const Color(0x880D41A1),
                 minimumSize: const Size(double.infinity, 55),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
               ),
-              child: const Text(
-                  "Start ",
-                  style: TextStyle(color: Colors.white, fontSize: 18)
+              child: Text(
+                  _taskCompleted ? "Completed ✓" : "Start",
+                  style: const TextStyle(color: Colors.white, fontSize: 18)
               ),
             ),
 
             const SizedBox(height: 15),
 
-            // Blue Start Button from your screenshot
-            ElevatedButton(
-              onPressed: () {
-                // Future logic: Trigger the specific activity
-                Navigator.pop(context, true);
+            // Mark as Done — only appears after the task timer is fully completed
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.3),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-              ),
-              child: const Text(
-                  "Mark as Done",
-                  style: TextStyle(color: Colors.white, fontSize: 18)
-              ),
+              child: _taskCompleted
+                  ? ElevatedButton(
+                      key: const ValueKey('markAsDone'),
+                      onPressed: () {
+                        Navigator.pop(context, true);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        minimumSize: const Size(double.infinity, 55),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      ),
+                      child: const Text(
+                          "Mark as Done",
+                          style: TextStyle(color: Colors.white, fontSize: 18)
+                      ),
+                    )
+                  : const SizedBox.shrink(key: ValueKey('empty')),
             ),
           ],
         ),

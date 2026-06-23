@@ -165,19 +165,26 @@ class _WordGameScreenState extends State<WordGameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFF8FAFF),
-      appBar: AppBar(
-        title: Text(
-          "Time Left: $_secondsLeft s",
-          style: TextStyle(
-            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
-          ),
-        ),
-        centerTitle: true,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.pop(context, _state == GameState.results);
+      },
+      child: Scaffold(
         backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFF8FAFF),
+        appBar: AppBar(
+          title: Text(
+            "Time Left: $_secondsLeft s",
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+            ),
+          ),
+          centerTitle: true,
+          backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFF8FAFF),
+        ),
+        body: Center(child: _buildGameContent()),
       ),
-      body: Center(child: _buildGameContent()),
     );
   }
 
@@ -190,7 +197,8 @@ class _WordGameScreenState extends State<WordGameScreen> {
           const SizedBox(height: 10),
           Text("Score: $_score / $_totalQuestions", style: const TextStyle(fontSize: 24)),
           const SizedBox(height: 30),
-          ElevatedButton(onPressed: () => Navigator.pop(context),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,   // button color
                 foregroundColor: Colors.white,  // text color

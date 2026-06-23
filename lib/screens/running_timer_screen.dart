@@ -17,6 +17,7 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
   late int _secondsRemaining;
   Timer? _timer;
   bool _isPaused = false;
+  bool _isCompleted = false;
 
   @override
   void initState() {
@@ -37,6 +38,9 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
         setState(() => _secondsRemaining--);
       } else if (_secondsRemaining == 0) {
         _timer?.cancel();
+        setState(() {
+          _isCompleted = true;
+        });
         _showCompletionDialog();
       }
     });
@@ -69,51 +73,58 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFF8FAFF),
-      appBar: AppBar(
-          title: Text(
-            "Running Session",
-            style: TextStyle(
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.pop(context, _isCompleted);
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFF8FAFF),
+        appBar: AppBar(
+            title: Text(
+              "Running Session",
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+              ),
             ),
+            backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFE8FAFF),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(25.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.directions_run, size: 80, color: Colors.blue),
+              const SizedBox(height: 20),
+              Text(
+                _formatTime(_secondsRemaining),
+                style: const TextStyle(fontSize: 80, fontWeight: FontWeight.w200),
+              ),
+              const SizedBox(height: 40),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Text(
+                  _getInstruction(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.blueGrey),
+                ),
+              ),
+              const SizedBox(height: 50),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  backgroundColor: _isPaused ? Colors.green : Colors.orange,
+                ),
+                onPressed: () => setState(() => _isPaused = !_isPaused),
+                child: Text(_isPaused ? "RESUME" : "PAUSE", style: const TextStyle(color: Colors.white)),
+              ),
+            ],
           ),
-          backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFE8FAFF),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(25.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.directions_run, size: 80, color: Colors.blue),
-            const SizedBox(height: 20),
-            Text(
-              _formatTime(_secondsRemaining),
-              style: const TextStyle(fontSize: 80, fontWeight: FontWeight.w200),
-            ),
-            const SizedBox(height: 40),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Text(
-                _getInstruction(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.blueGrey),
-              ),
-            ),
-            const SizedBox(height: 50),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                backgroundColor: _isPaused ? Colors.green : Colors.orange,
-              ),
-              onPressed: () => setState(() => _isPaused = !_isPaused),
-              child: Text(_isPaused ? "RESUME" : "PAUSE", style: const TextStyle(color: Colors.white)),
-            ),
-          ],
         ),
       ),
     );

@@ -16,6 +16,7 @@ class _MeditationTimerScreenState extends State<MeditationTimerScreen> {
   bool _isPaused = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isMusicPlaying = false;
+  bool _isCompleted = false;
 
   @override
   void initState() {
@@ -61,6 +62,9 @@ class _MeditationTimerScreenState extends State<MeditationTimerScreen> {
       } else if (_secondsRemaining == 0) {
         _timer?.cancel();
         _stopAudio();
+        setState(() {
+          _isCompleted = true;
+        });
         _showCompletionDialog();
       }
     });
@@ -102,13 +106,19 @@ class _MeditationTimerScreenState extends State<MeditationTimerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFF8FAFF),
-      appBar: AppBar(
-        title: const Text('Meditation Timer'),
-        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFE8FAFF),
-      ),
-      body: Padding(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.pop(context, _isCompleted);
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFF8FAFF),
+        appBar: AppBar(
+          title: const Text('Meditation Timer'),
+          backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFE8FAFF),
+        ),
+        body: Padding(
         padding: const EdgeInsets.all(25.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -155,6 +165,7 @@ class _MeditationTimerScreenState extends State<MeditationTimerScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

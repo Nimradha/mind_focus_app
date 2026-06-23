@@ -8,6 +8,8 @@ import 'package:audioplayers/audioplayers.dart' hide Source;
 import 'word_game_screen.dart';
 import 'running_timer_screen.dart';
 import 'imagination_timer_screen.dart';
+import 'fullscreen_completion_screen.dart';
+
 
 class Exercise {
   final String title;
@@ -254,6 +256,31 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
   }
 
+  Future<void> _showCompletionImageIfMatched(BuildContext context, String title) async {
+    String? imagePath;
+    String titleLower = title.toLowerCase();
+    
+    if (titleLower.contains("meditation")) {
+      imagePath = "assets/images/task1_complete.png";
+    } else if (titleLower.contains("running")) {
+      imagePath = "assets/images/running_complete.png";
+    } else if (titleLower.contains("word") || titleLower.contains("memory")) {
+      imagePath = "assets/images/wordmem_complete.png";
+    }
+
+    if (imagePath != null) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FullScreenCompletionScreen(
+            imagePath: imagePath!,
+            title: title,
+          ),
+        ),
+      );
+    }
+  }
+
   void _showSuccessPopup(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -387,7 +414,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _markExerciseAsDone(String title) async {
     // 1. Find the index of the exercise by its title
     final exercises = _getDynamicExercises();
-    int index = exercises.indexWhere((e) => e.title == title);
+    int index = exercises.indexWhere((e) => e.title.toLowerCase().contains(title.toLowerCase()));
 
     // 2. If found and not already done, update the state
     if (index != -1 && !_isDoneList[index]) {
@@ -410,6 +437,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       // 4. Show the green success bar and check if the whole day is finished
+      await _showCompletionImageIfMatched(context, exercises[index].title);
       _showSuccessPopup(exercises[index].completionMessage);
       _checkCompletion();
     }
@@ -643,6 +671,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
               }
                 if (_isDoneList[index]) {
+                  await _showCompletionImageIfMatched(context, exercise.title);
                   _showSuccessPopup(exercise.completionMessage);
                   _checkCompletion();
                 }
@@ -722,6 +751,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
                 }
 
+                await _showCompletionImageIfMatched(context, exercise.title);
                 _showSuccessPopup(exercise.completionMessage);
                 _checkCompletion();
               }

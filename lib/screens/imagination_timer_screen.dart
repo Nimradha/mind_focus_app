@@ -21,6 +21,7 @@ class _ImaginationTimerScreenState extends State<ImaginationTimerScreen> {
   Timer? _timer;
   final AudioPlayer _player = AudioPlayer();
   bool _isPaused = false;
+  bool _isCompleted = false;
 
   @override
   void initState() {
@@ -72,6 +73,9 @@ class _ImaginationTimerScreenState extends State<ImaginationTimerScreen> {
   void _endSession() {
     _timer?.cancel();
     _player.stop();
+    setState(() {
+      _isCompleted = true;
+    });
     _showFinishedDialog();
   }
 
@@ -83,14 +87,20 @@ class _ImaginationTimerScreenState extends State<ImaginationTimerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black, // Dark background helps focus/imagination
-      appBar: AppBar(backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: _quitEarly, // Stop everything and go back
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.pop(context, _isCompleted);
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black, // Dark background helps focus/imagination
+        appBar: AppBar(backgroundColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: _quitEarly, // Stop everything and go back
+          ),
         ),
-      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -123,10 +133,12 @@ class _ImaginationTimerScreenState extends State<ImaginationTimerScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showFinishedDialog() {
+    final navigator = Navigator.of(context);
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -137,7 +149,7 @@ class _ImaginationTimerScreenState extends State<ImaginationTimerScreen> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK")),
         ],
       ),
-    ).then((_) => Navigator.pop(context, true));
+    ).then((_) => navigator.pop(true));
   }
 
   @override

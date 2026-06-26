@@ -3,6 +3,7 @@ import 'home_screen.dart';
 import 'meditation_timer_screen.dart';
 import 'word_game_screen.dart';
 import 'running_timer_screen.dart';
+import 'imagination_timer_screen.dart';
 
 
 class TaskDetailScreen extends StatefulWidget {
@@ -28,6 +29,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       targetScreen = RunningTimerScreen(
         completedDaysCount: 0,
         minutes: minutes,
+        instruction: widget.exercise.instructions,
+      );
+    } else if (title.contains('somatic') || title.contains('labeling') || title.contains('imagination')) {
+      targetScreen = ImaginationTimerScreen(
+        completedDaysCount: 0,
         instruction: widget.exercise.instructions,
       );
     } else {

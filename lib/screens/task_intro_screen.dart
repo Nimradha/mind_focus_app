@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'details.dart';
+import 'labeling_intro_screen.dart';
+import 'imagination_intro_screen.dart';
 
 class TaskIntroScreen extends StatefulWidget {
   final Exercise exercise;
@@ -12,8 +14,50 @@ class TaskIntroScreen extends StatefulWidget {
 }
 
 class _TaskIntroScreenState extends State<TaskIntroScreen> {
+  bool _redirected = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Redirect to LabelingIntroScreen if this is a labeling exercise
+    if (!_redirected && widget.exercise.title.toLowerCase().contains('labeling')) {
+      _redirected = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LabelingIntroScreen(exercise: widget.exercise),
+          ),
+        );
+        if (mounted) {
+          Navigator.pop(context, result);
+        }
+      });
+    }
+    // Redirect to ImaginationIntroScreen if this is an imagination exercise
+    if (!_redirected && widget.exercise.title.toLowerCase().contains('imagination')) {
+      _redirected = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ImaginationIntroScreen(exercise: widget.exercise),
+          ),
+        );
+        if (mounted) {
+          Navigator.pop(context, result);
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // If we're about to redirect, show a loading indicator briefly
+    String titleLowerCheck = widget.exercise.title.toLowerCase();
+    if (titleLowerCheck.contains('labeling') || titleLowerCheck.contains('imagination')) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     String imagePath;
     String titleLower = widget.exercise.title.toLowerCase();
     
@@ -26,6 +70,8 @@ class _TaskIntroScreenState extends State<TaskIntroScreen> {
       imagePath = "assets/images/word_mem.png";
     } else if (titleLower.contains("run") || titleLower.contains("jog")) {
       imagePath = "assets/images/running.png";
+    } else if (titleLower.contains("somatic")) {
+      imagePath = "assets/images/somatic.png";
     } else {
       // 4th exercise (Somatic tracking, Labeling, Imagination Training, etc.)
       imagePath = "assets/images/activity4.png";

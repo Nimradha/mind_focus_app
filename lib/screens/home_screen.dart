@@ -231,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: _getFourthExerciseTitle(),
         subtitle: "Creative Agility",
         instructions: _getFourthExerciseInstructions(),
-        imagePath: "assets/images/imagination.png",
+        imagePath: _getFourthExerciseImagePath(),
         duration: "5 Mins",
         completionMessage: "Creativity flowing! 🎨",
         isEnabled: !isBefore6PM,
@@ -266,6 +266,10 @@ class _HomeScreenState extends State<HomeScreen> {
       imagePath = "assets/images/running_complete.png";
     } else if (titleLower.contains("word") || titleLower.contains("memory")) {
       imagePath = "assets/images/wordmem_complete.png";
+    } else if (titleLower.contains("somatic") ||
+        titleLower.contains("labeling") ||
+        titleLower.contains("imagination")) {
+      imagePath = "assets/images/task4_complete.png";
     }
 
     if (imagePath != null) {
@@ -890,6 +894,16 @@ class _HomeScreenState extends State<HomeScreen> {
     if (days < 7) return "Somatic tracking";
     if (days < 14) return "Labeling";
     return "Imagination Training";
+  }
+
+  String _getFourthExerciseImagePath() {
+    String title = _getFourthExerciseTitle().toLowerCase();
+    if (title.contains("somatic")) {
+      return "assets/images/somatic.png";
+    } else if (title.contains("labeling")) {
+      return "assets/images/labeling1.png";
+    }
+    return "assets/images/imagination.png";
   }
 
   String _getFourthExerciseInstructions() {

@@ -95,7 +95,15 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.directions_run, size: 80, color: Colors.blue),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image.asset(
+                  'assets/images/runtimer.jpeg',
+                  width: 150,
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
+              ),
               const SizedBox(height: 20),
               Text(
                 _formatTime(_secondsRemaining),

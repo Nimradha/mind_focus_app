@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Newra</string>
+    <string name="facebook_app_id">2418715778540418</string>
+    <string name="facebook_client_token">d7e354f4881626d56751997a8ceb9d98</string>
+    <string name="fb_login_protocol_scheme">fb2418715778540418</string>
+</resources>

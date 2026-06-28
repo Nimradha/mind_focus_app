@@ -45,6 +45,7 @@ dependencies:
   cloud_firestore: ^6.2.0
   audioplayers: ^6.4.0
   syncfusion_flutter_pdfviewer: ^26.2.14
+  flutter_facebook_auth: ^7.1.1
 
 dev_dependencies:
   flutter_test:

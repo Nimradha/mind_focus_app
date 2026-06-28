@@ -725,11 +725,13 @@ class _HomeScreenState extends State<HomeScreen> {
               : ElevatedButton(
             onPressed: !exercise.isEnabled ? null : () async {
 
-              // Clicking "Start" still marks it as done (logical progression)
+              // Navigate to intro screen (first 3 days) or directly to details
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => TaskIntroScreen(exercise: exercise),
+                  builder: (context) => _shouldShowIntro(index)
+                      ? TaskIntroScreen(exercise: exercise)
+                      : TaskDetailScreen(exercise: exercise),
                 ),
               );
 
@@ -845,6 +847,29 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  // Returns true if the intro image screen should be shown for this task.
+  // Intro is only shown for the first 3 days that each task appears.
+  bool _shouldShowIntro(int index) {
+    int days = _daysSinceCreation();
+
+    // Tasks 0, 1, 2 (Meditation, Word Memory, Running): appear from day 0
+    if (index <= 2) {
+      return days < 3;
+    }
+
+    // Task 3 (4th exercise) changes based on days since creation:
+    // Somatic Tracking (days 0-6): show intro on days 0-2
+    if (days < 7) {
+      return days < 3;
+    }
+    // Labeling (days 7-13): show intro on days 7-9
+    if (days < 14) {
+      return days < 10;
+    }
+    // Imagination Training (days 14+): show intro on days 14-16
+    return days < 17;
   }
 
   // Returns the number of days since the user account was created.

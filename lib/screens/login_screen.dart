@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'main_wrapper.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -83,11 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   _socialButton('assets/images/google.png', _handleGoogleSignIn),
                   const SizedBox(width: 20),
-                  _socialButton('assets/images/fb1.png', () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Facebook Sign-In is not configured yet.")),
-                    );
-                  }),
+                  _socialButton('assets/images/fb1.png', _handleFacebookSignIn),
                 ],
               ),
             ],
@@ -305,6 +302,70 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(
             backgroundColor: Colors.orange,
             content: Text("Google login failed: $e"),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleFacebookSignIn() async {
+    try {
+      debugPrint("Attempting Facebook Sign-In...");
+
+      final LoginResult result = await FacebookAuth.instance.login();
+
+      if (result.status == LoginStatus.cancelled) {
+        debugPrint("Facebook Sign-In canceled by user.");
+        return;
+      }
+
+      if (result.status != LoginStatus.success) {
+        debugPrint("Facebook Sign-In failed: ${result.message}");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.orange,
+              content: Text("Facebook login failed: ${result.message}"),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Get access token and create Firebase credential
+      final AccessToken accessToken = result.accessToken!;
+      final OAuthCredential credential =
+          FacebookAuthProvider.credential(accessToken.tokenString);
+
+      // Sign in to Firebase
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      if (!mounted) return;
+
+      debugPrint("Facebook login successful: ${userCredential.user?.uid}");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.greenAccent,
+          content: Text(
+            "Welcome Back!",
+            style: TextStyle(color: Colors.black),
+          ),
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainWrapper()),
+      );
+    } catch (e) {
+      debugPrint("Facebook Sign-In Error: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.orange,
+            content: Text("Facebook login failed: $e"),
           ),
         );
       }

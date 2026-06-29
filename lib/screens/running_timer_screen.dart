@@ -98,7 +98,9 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(15),
                 child: Image.asset(
-                  'assets/images/runtimer.jpeg',
+                  Theme.of(context).brightness == Brightness.dark
+                      ? 'assets/images/runtimer.jpeg'
+                      : 'assets/images/runlight_timer.jpeg',
                   width: 150,
                   height: 200,
                   fit: BoxFit.cover,

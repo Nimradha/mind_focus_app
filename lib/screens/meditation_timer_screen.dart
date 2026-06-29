@@ -126,7 +126,9 @@ class _MeditationTimerScreenState extends State<MeditationTimerScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(15),
               child: Image.asset(
-                'assets/images/medtimer.jpeg',
+                Theme.of(context).brightness == Brightness.dark
+                    ? 'assets/images/medtimer.jpeg'
+                    : 'assets/images/medlight_timer.jpeg',
                 width: 150,
                 height: 200,
                 fit: BoxFit.cover,

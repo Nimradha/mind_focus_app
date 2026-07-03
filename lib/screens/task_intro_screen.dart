@@ -133,6 +133,7 @@ class _TaskIntroScreenState extends State<TaskIntroScreen> {
               child: AnimatedStartButton(
                 onPressed: () async {
                   final navigator = Navigator.of(context);
+                  await Future.delayed(const Duration(milliseconds: 400));
                   final result = await navigator.push(
                     AnimatedPageRoute(
                       page: TaskDetailScreen(

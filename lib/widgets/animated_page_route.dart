@@ -8,8 +8,8 @@ class AnimatedPageRoute<T> extends PageRouteBuilder<T> {
   AnimatedPageRoute({required this.page})
       : super(
           pageBuilder: (context, animation, secondaryAnimation) => page,
-          transitionDuration: const Duration(milliseconds: 500),
-          reverseTransitionDuration: const Duration(milliseconds: 350),
+          transitionDuration: const Duration(milliseconds: 800),
+          reverseTransitionDuration: const Duration(milliseconds: 500),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             // Curved animation for a natural feel
             final curved = CurvedAnimation(
@@ -18,9 +18,9 @@ class AnimatedPageRoute<T> extends PageRouteBuilder<T> {
               reverseCurve: Curves.easeInCubic,
             );
 
-            // 1. Slide up from 15% below
+            // 1. Slide up from 30% below
             final slideAnimation = Tween<Offset>(
-              begin: const Offset(0.0, 0.15),
+              begin: const Offset(0.0, 0.30),
               end: Offset.zero,
             ).animate(curved);
 
@@ -30,9 +30,9 @@ class AnimatedPageRoute<T> extends PageRouteBuilder<T> {
               end: 1.0,
             ).animate(curved);
 
-            // 3. Subtle scale from 95% to 100%
+            // 3. Scale from 85% to 100%
             final scaleAnimation = Tween<double>(
-              begin: 0.95,
+              begin: 0.85,
               end: 1.0,
             ).animate(curved);
 

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'details.dart';
 import 'task_intro_screen.dart';
+import '../widgets/animated_page_route.dart';
 import 'achievement_screen.dart';
 import 'package:audioplayers/audioplayers.dart' hide Source;
 import 'word_game_screen.dart';
@@ -728,8 +729,8 @@ class _HomeScreenState extends State<HomeScreen> {
               // Navigate to intro screen (first 3 days) or directly to details
               final result = await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => _shouldShowIntro(index)
+                AnimatedPageRoute(
+                  page: _shouldShowIntro(index)
                       ? TaskIntroScreen(exercise: exercise)
                       : TaskDetailScreen(exercise: exercise),
                 ),

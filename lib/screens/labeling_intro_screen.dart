@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'details.dart';
+import '../widgets/animated_start_button.dart';
+import '../widgets/animated_page_route.dart';
 
 class LabelingIntroScreen extends StatefulWidget {
   final Exercise exercise;
@@ -101,54 +103,28 @@ class _LabelingIntroScreenState extends State<LabelingIntroScreen> {
               ),
             ),
 
-          // 5. Start Button at the bottom - only on Page 2 (labeling2)
+          // 5. Start Button at the bottom right - only on Page 2 (labeling2)
           if (_currentPage == 1)
             Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
+              bottom: 20,
+              right: 24,
               child: SafeArea(
                 top: false,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 24.0, vertical: 20.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () async {
-                          final navigator = Navigator.of(context);
-                          final result = await navigator.push(
-                            MaterialPageRoute(
-                              builder: (context) => TaskDetailScreen(
-                                exercise: widget.exercise,
-                              ),
-                            ),
-                          );
-
-                          if (result == true) {
-                            navigator.pop(true);
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          minimumSize: const Size(50, 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          elevation: 4,
-                        ),
-                        child: const Text(
-                          "Start",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                child: AnimatedStartButton(
+                  onPressed: () async {
+                    final navigator = Navigator.of(context);
+                    final result = await navigator.push(
+                      AnimatedPageRoute(
+                        page: TaskDetailScreen(
+                          exercise: widget.exercise,
                         ),
                       ),
-                    ],
-                  ),
+                    );
+
+                    if (result == true) {
+                      navigator.pop(true);
+                    }
+                  },
                 ),
               ),
             ),

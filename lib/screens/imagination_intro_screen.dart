@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'home_screen.dart';
 import 'details.dart';
 import '../widgets/animated_start_button.dart';
@@ -16,6 +17,29 @@ class ImaginationIntroScreen extends StatefulWidget {
 class _ImaginationIntroScreenState extends State<ImaginationIntroScreen> {
   // Track which page we're on: 0 = imagination1, 1 = imagination2
   int _currentPage = 0;
+  final AudioPlayer _pagesSoundPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    _playPagesSound();
+  }
+
+  void _playPagesSound() async {
+    try {
+      await _pagesSoundPlayer.setReleaseMode(ReleaseMode.stop);
+      await _pagesSoundPlayer.play(AssetSource('audio/pages_sound.mpeg'));
+      debugPrint("Pages sound played");
+    } catch (e) {
+      debugPrint("Error playing pages sound: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    _pagesSoundPlayer.dispose();
+    super.dispose();
+  }
 
   void _goToNextPage() {
     setState(() {

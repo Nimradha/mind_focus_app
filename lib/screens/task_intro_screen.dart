@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'home_screen.dart';
 import 'details.dart';
 import 'labeling_intro_screen.dart';
@@ -17,6 +18,29 @@ class TaskIntroScreen extends StatefulWidget {
 
 class _TaskIntroScreenState extends State<TaskIntroScreen> {
   bool _redirected = false;
+  final AudioPlayer _pagesSoundPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    _playPagesSound();
+  }
+
+  void _playPagesSound() async {
+    try {
+      await _pagesSoundPlayer.setReleaseMode(ReleaseMode.stop);
+      await _pagesSoundPlayer.play(AssetSource('audio/pages_sound.mpeg'));
+      debugPrint("Pages sound played");
+    } catch (e) {
+      debugPrint("Error playing pages sound: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    _pagesSoundPlayer.dispose();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {

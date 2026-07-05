@@ -48,6 +48,7 @@ class HomeScreen extends StatefulWidget {
 // 2. THE STATE CLASS (This handles all the logic and UI)
 class _HomeScreenState extends State<HomeScreen> {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _homePageSoundPlayer = AudioPlayer();
   bool _isMusicPlaying = false;
 
   int _completedDaysCount = 0;
@@ -61,7 +62,19 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _playHomePageSound();
     _loadUserProgress();
+  }
+
+  /// Plays the home page welcome sound once when the screen loads
+  void _playHomePageSound() async {
+    try {
+      await _homePageSoundPlayer.setReleaseMode(ReleaseMode.stop);
+      await _homePageSoundPlayer.play(AssetSource('audio/home_page_sound.mpeg'));
+      debugPrint("Home page sound played");
+    } catch (e) {
+      debugPrint("Error playing home page sound: $e");
+    }
   }
 
   void _loadUserProgress() async {
@@ -413,6 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _homePageSoundPlayer.dispose();
     super.dispose();
   }
 

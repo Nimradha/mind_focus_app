@@ -54,15 +54,15 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
   // Use the same instruction set as defined in HomeScreen
   int day = widget.completedDaysCount + 1;
   // --- 5 MINUTE SESSIONS (Days 1 - 15) ---
-  if (day <= 3) return "Count down from 500, decreasing by 3 each time (500, 497, 494...).";
-  if (day <= 6) return "Count down from 500, decreasing by 7 each time (500, 493, 486...).";
-  if (day <= 9) return "Count down from 500, decreasing by 13 each time (500, 487, 474...).";
-  if (day <= 12) return "Count down from 1000, decreasing by 3 each time (1000, 997, 994...).";
-  if (day <= 15) return "Count down from 1000, decreasing by 7 each time (1000, 993, 986...).";
-  if (day <= 18) return "Count down from 1000, decreasing by 13 each time (1000, 987, 974...).";
-  if (day <= 24) return "Count down: 1000, decreasing by 1 to 5 sequentially (1000, 999, 997, 994,990,985) then repeat decreasing again from 1 to 5 (984,982,979...)";
-  if (day <= 30) return "Count down: 1000, decreasing by 1 to 10 sequentially (1000, 999, 997, 994...).";
-  return "FINAL CHALLENGE: Subtract any random number between 1 and 15 after every breath.";
+  if (day <= 3) return "Start counting from 500.Decrease by exactly 3 at each step.Continue counting down until you reach 0.(500, 497, 494...).Tap the start button below to kick off your daily routine.Let's make progress together, one step at a time. ";
+  if (day <= 6) return "Start counting from 500.Decrease by exactly 7 at each step.Continue counting down until you reach 0(500, 493, 486...).Tap the start button below to kick off your daily routine.Let's make progress together, one step at a time. ";
+  if (day <= 9) return "Start counting from 500.Decrease by exactly 13 at each step.Continue counting down until you reach 0 (500, 487, 474...).";
+  if (day <= 12) return "Start counting from 1000.Decrease by exactly 3 at each step.Continue counting down until you reach 0 (1000, 997, 994...).";
+  if (day <= 15) return "Start counting from 1000.Decrease by exactly 7 at each step.Continue counting down until you reach 0 (1000, 993, 986...).";
+  if (day <= 18) return "Start counting from 1000.Decrease by exactly 13 at each step.Continue counting down until you reach 0 (1000, 987, 974...).";
+  if (day <= 24) return "Start counting from 1000.Decrease from 1 to 5 sequentially (1000, 999, 997, 994,990,985) then repeat decreasing again from 1 to 5 (984,982,979...)";
+  if (day <= 30) return "Start counting from 1000.Decrease from 1 to 10 sequentially (1000, 999, 997, 994...) then repeat decreasing again from 1 to 10";
+  return "FINAL CHALLENGE: Start counting from any random number.Decrease from 1 to 15 sequentially after every breath.";
 }
 
   String _formatTime(int seconds) {
@@ -94,6 +94,7 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
           padding: const EdgeInsets.all(25.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(15),
@@ -110,19 +111,6 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
               Text(
                 _formatTime(_secondsRemaining),
                 style: const TextStyle(fontSize: 80, fontWeight: FontWeight.w200),
-              ),
-              const SizedBox(height: 40),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Text(
-                  _getInstruction(),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.blueGrey),
-                ),
               ),
               const SizedBox(height: 50),
               ElevatedButton(

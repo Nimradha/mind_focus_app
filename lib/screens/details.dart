@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'home_screen.dart';
 import 'meditation_timer_screen.dart';
 import 'word_game_screen.dart';
@@ -17,6 +18,37 @@ class TaskDetailScreen extends StatefulWidget {
 
 class _TaskDetailScreenState extends State<TaskDetailScreen> {
   bool _taskCompleted = false;
+
+  // Word-by-word instruction animation
+  int _visibleWordCount = 0;
+  Timer? _wordTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startInstructionAnimation();
+  }
+
+  /// Animates the instruction text word-by-word with a 150ms stagger
+  void _startInstructionAnimation() {
+    final wordCount = widget.exercise.instructions.split(' ').length;
+
+    _wordTimer = Timer.periodic(const Duration(milliseconds: 150), (timer) {
+      if (_visibleWordCount >= wordCount) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _visibleWordCount++;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _wordTimer?.cancel();
+    super.dispose();
+  }
 
   Future<void> _onStartPressed() async {
     final title = widget.exercise.title.toLowerCase();
@@ -160,8 +192,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
   }
 
-  // Instructions Card Widget
+  // Instructions Card Widget — with word-by-word animation
   Widget _buildInstructionsCard(String text, BuildContext context) {
+    final words = text.split(' ');
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -182,7 +216,29 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          Text(text, style: const TextStyle(color: Colors.grey, height: 1.5)),
+          Wrap(
+            children: [
+              for (int i = 0; i < words.length; i++)
+                AnimatedOpacity(
+                  opacity: i < _visibleWordCount ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 400),
+                  child: AnimatedSlide(
+                    offset: i < _visibleWordCount
+                        ? Offset.zero
+                        : const Offset(0, 0.5),
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOut,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 4.0),
+                      child: Text(
+                        words[i],
+                        style: const TextStyle(color: Colors.grey, height: 1.5),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );

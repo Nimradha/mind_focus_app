@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -46,7 +47,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 // 2. THE STATE CLASS (This handles all the logic and UI)
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final AudioPlayer _audioPlayer = AudioPlayer();
   final AudioPlayer _homePageSoundPlayer = AudioPlayer();
   bool _isMusicPlaying = false;
@@ -59,11 +60,34 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _eveningCongratsShown = false;
   bool _allCongratsShown = false;
 
+  // Word-by-word heading animation
+  int _visibleWordCount = 0;
+  Timer? _wordTimer;
+
   @override
   void initState() {
     super.initState();
     _playHomePageSound();
     _loadUserProgress();
+    _startHeadingAnimation();
+  }
+
+  /// Animates the heading text word-by-word with a 300ms stagger
+  void _startHeadingAnimation() {
+    final heading = DateTime.now().hour < 18
+        ? "Tasks to be done before 6 PM"
+        : "Tasks to be done after 6 PM";
+    final wordCount = heading.split(' ').length;
+
+    _wordTimer = Timer.periodic(const Duration(milliseconds: 300), (timer) {
+      if (_visibleWordCount >= wordCount) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _visibleWordCount++;
+      });
+    });
   }
 
   /// Plays the home page welcome sound once when the screen loads
@@ -192,12 +216,12 @@ class _HomeScreenState extends State<HomeScreen> {
         title: "Word Memory Game",
         subtitle: "Cognitive Speed",
         instructions: _daysSinceCreation() < 2
-            ? "1 word is displayed for 2 second. Next a question is asked related to that word.Select your answer out of 4 choices."
+            ? "1 word is displayed for 2 seconds. Next a question is asked related to that word.Select your answer out of 4 choices."
             : _daysSinceCreation() < 7
-                ? "2 words are displayed for 4 seconds. Next 2 questions are asked.Select your answer."
+                ? "2 words are displayed for 4 seconds. Next 2 questions are asked related to those 2 words.Select your answer out of 4 choices."
                 : _daysSinceCreation() < 14
-                    ? "3 words are displayed for 5 seconds. Next 3 questions are asked.Select your answer."
-                    : "4 words are displayed for 6 seconds. Next 4 questions are asked.Select your answer.",
+                    ? "3 words are displayed for 5 seconds. Next 3 questions are asked related to those 3 words.Select your answer."
+                    : "4 words are displayed for 6 seconds. Next 4 questions are asked related to those 4 words.Select your answer.",
         imagePath: "assets/images/memory.png",
         duration: _daysSinceCreation() < 7 ? "2 Mins" : _daysSinceCreation() < 14 ? "4 Mins" : "5 Mins",
         completionMessage: "Memory sharpened! 🧠",
@@ -425,6 +449,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // CRITICAL: Always clean up the player when the screen is closed
   @override
   void dispose() {
+    _wordTimer?.cancel();
     _audioPlayer.dispose();
     _homePageSoundPlayer.dispose();
     super.dispose();
@@ -637,16 +662,39 @@ class _HomeScreenState extends State<HomeScreen> {
         ? "Tasks to be done before 6 PM"
         : "Tasks to be done after 6 PM";
 
+    final words = heading.split(' ');
+    final headingColor = isBefore6PM ? Colors.blue.shade700 : Colors.indigo.shade400;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          heading,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: isBefore6PM ? Colors.blue.shade700 : Colors.indigo.shade400,
-          ),
+        // Animated word-by-word heading
+        Wrap(
+          children: [
+            for (int i = 0; i < words.length; i++)
+              AnimatedOpacity(
+                opacity: i < _visibleWordCount ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 400),
+                child: AnimatedSlide(
+                  offset: i < _visibleWordCount
+                      ? Offset.zero
+                      : const Offset(0, 0.5),
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOut,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 5.0),
+                    child: Text(
+                      words[i],
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: headingColor,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 12),
         for (int i in visibleIndices)
@@ -905,24 +953,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _getMeditationInstructions() {
     int mins = _getMeditationDurationMinutes();
-    return "Give your mind a break.Find a quiet space and focus on your breath for $mins minutes.";
+    return "Give your mind a break.Sit in a quiet place where you won't be interrupted. Let your shoulders drop and rest your hands loosely in your lap.Gently close your eyes.Bring your full attention to your breathing for $mins minutes.";
   }
 
   String _getRunningInstructions() {
     int day = _daysSinceCreation() + 1;
 
     // --- 5 MINUTE SESSIONS (Days 1 - 15) ---
-    if (day <= 3) return "Count down from 500, decreasing by 3 each time (500, 497, 494...).";
-    if (day <= 6) return "Count down from 500, decreasing by 7 each time (500, 493, 486...).";
-    if (day <= 9) return "Count down from 500, decreasing by 13 each time (500, 487, 474...).";
-    if (day <= 12) return "Count down from 1000, decreasing by 3 each time (1000, 997, 994...).";
-    if (day <= 15) return "Count down from 1000, decreasing by 7 each time (1000, 993, 986...).";
-    if (day <= 18) return "Count down from 1000, decreasing by 13 each time (1000, 987, 974...).";
-    if (day <= 24) return "Count down: 1000, decreasing by 1 to 5 sequentially (1000, 999, 997, 994,990,985) then repeat decreasing again from 1 to 5 (984,982,979...)";
-    if (day <= 30) return "Count down: 1000, decreasing by 1 to 10 sequentially (1000, 999, 997, 994...).";
+    if (day <= 3) return "Start counting from 500.Decrease by exactly 3 at each step.Continue counting down until you reach 0.(500, 497, 494...).Tap the start button below to kick off your daily routine.Let's make progress together, one step at a time. ";
+    if (day <= 6) return "Start counting from 500.Decrease by exactly 7 at each step.Continue counting down until you reach 0(500, 493, 486...).Tap the start button below to kick off your daily routine.Let's make progress together, one step at a time. ";
+    if (day <= 9) return "Start counting from 500.Decrease by exactly 13 at each step.Continue counting down until you reach 0 (500, 487, 474...).";
+    if (day <= 12) return "Start counting from 1000.Decrease by exactly 3 at each step.Continue counting down until you reach 0 (1000, 997, 994...).";
+    if (day <= 15) return "Start counting from 1000.Decrease by exactly 7 at each step.Continue counting down until you reach 0 (1000, 993, 986...).";
+    if (day <= 18) return "Start counting from 1000.Decrease by exactly 13 at each step.Continue counting down until you reach 0 (1000, 987, 974...).";
+    if (day <= 24) return "Start counting from 1000.Decrease from 1 to 5 sequentially (1000, 999, 997, 994,990,985) then repeat decreasing again from 1 to 5 (984,982,979...)";
+    if (day <= 30) return "Start counting from 1000.Decrease from 1 to 10 sequentially (1000, 999, 997, 994...) then repeat decreasing again from 1 to 10";
 
     
-    return "FINAL CHALLENGE: Subtract any random number between 1 and 15 after every breath.";
+    return "FINAL CHALLENGE: Start counting from any random number.Decrease from 1 to 15 sequentially after every breath.";
   }
 
   String _getFourthExerciseTitle() {
@@ -939,7 +987,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _getFourthExerciseImagePath() {
     String title = _getFourthExerciseTitle().toLowerCase();
     if (title.contains("somatic")) {
-      return "assets/images/somatic.png";
+      return "assets/images/somaticdetail.png";
     } else if (title.contains("labeling")) {
       return "assets/images/labeling1.png";
     }

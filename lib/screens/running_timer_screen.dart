@@ -90,38 +90,40 @@ class _RunningTimerScreenState extends State<RunningTimerScreen> {
             ),
             backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : const Color(0xFFE8FAFF),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(25.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: Image.asset(
-                  Theme.of(context).brightness == Brightness.dark
-                      ? 'assets/images/runtimer.jpeg'
-                      : 'assets/images/runlight_timer.jpeg',
-                  width: 150,
-                  height: 200,
-                  fit: BoxFit.cover,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(25.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Image.asset(
+                    Theme.of(context).brightness == Brightness.dark
+                        ? 'assets/images/runtimer.jpeg'
+                        : 'assets/images/runlight_timer.jpeg',
+                    width: 150,
+                    height: 200,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                _formatTime(_secondsRemaining),
-                style: const TextStyle(fontSize: 80, fontWeight: FontWeight.w200),
-              ),
-              const SizedBox(height: 50),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  backgroundColor: _isPaused ? Colors.green : Colors.orange,
+                const SizedBox(height: 20),
+                Text(
+                  _formatTime(_secondsRemaining),
+                  style: const TextStyle(fontSize: 80, fontWeight: FontWeight.w200),
                 ),
-                onPressed: () => setState(() => _isPaused = !_isPaused),
-                child: Text(_isPaused ? "RESUME" : "PAUSE", style: const TextStyle(color: Colors.white)),
-              ),
-            ],
+                const SizedBox(height: 50),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    backgroundColor: _isPaused ? Colors.green : Colors.orange,
+                  ),
+                  onPressed: () => setState(() => _isPaused = !_isPaused),
+                  child: Text(_isPaused ? "RESUME" : "PAUSE", style: const TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
           ),
         ),
       ),

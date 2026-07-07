@@ -25,7 +25,7 @@ class _MainWrapperState extends State<MainWrapper> {
           _selectedIndex = 1; // Switches tab to PLAN
         });
       }),
-      const PlanScreen(),
+      PlanScreen(isVisible: _selectedIndex == 1),
       const AlarmTab(),
       const ProfileScreen(),
     ];

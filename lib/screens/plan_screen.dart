@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,7 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'pdf_viewer_screen.dart';
 
 class PlanScreen extends StatefulWidget {
-  const PlanScreen({super.key});
+  final bool isVisible;
+  const PlanScreen({super.key, this.isVisible = false});
 
   @override
   State<PlanScreen> createState() => _PlanScreenState();
@@ -13,18 +15,52 @@ class PlanScreen extends StatefulWidget {
 
 class _PlanScreenState extends State<PlanScreen> {
   late TextEditingController _amountController;
+  int _visibleSavingsWordCount = 0;
+  Timer? _savingsWordTimer;
+
   @override
   void initState() {
     super.initState();
     _amountController = TextEditingController();
     _loadChallengeState();
+    if (widget.isVisible) {
+      _startSavingsHeadingAnimation();
+    }
   }
 
+  @override
+  void didUpdateWidget(covariant PlanScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isVisible && !oldWidget.isVisible) {
+      _savingsWordTimer?.cancel();
+      setState(() {
+        _visibleSavingsWordCount = 0;
+      });
+      _startSavingsHeadingAnimation();
+    }
+  }
 
+  void _startSavingsHeadingAnimation() {
+    const heading = "Let's start saving";
+    final wordCount = heading.split(' ').length;
+
+    _savingsWordTimer = Timer.periodic(const Duration(milliseconds: 300), (timer) {
+      if (_visibleSavingsWordCount >= wordCount) {
+        timer.cancel();
+        return;
+      }
+      if (mounted) {
+        setState(() {
+          _visibleSavingsWordCount++;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
     _amountController.dispose();
+    _savingsWordTimer?.cancel();
     super.dispose();
   }
   Map<int, bool> _dayTasksDone = {};
@@ -86,6 +122,44 @@ class _PlanScreenState extends State<PlanScreen> {
 
           // Dynamic Task Dispatcher
           ..._buildDailyTasks(),
+
+          if (programDay >= 8) ...[
+            const SizedBox(height: 30),
+            Wrap(
+              children: [
+                for (int i = 0; i < "Let's start saving".split(' ').length; i++)
+                  AnimatedOpacity(
+                    opacity: i < _visibleSavingsWordCount ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 400),
+                    child: AnimatedSlide(
+                      offset: i < _visibleSavingsWordCount
+                          ? Offset.zero
+                          : const Offset(0, 0.5),
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOut,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 5.0),
+                        child: Text(
+                          "Let's start saving".split(' ')[i],
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            const Text(
+              "Enter the amount you saved today",
+              style: TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+            const SizedBox(height: 15),
+            _buildDailySavingsInput(),
+          ],
         ],
       ),
     );
@@ -1004,11 +1078,76 @@ void _updateMarks(int points) async {
           'totalSaved': parsed,
         }, SetOptions(merge: true));
       });
+      _amountController.clear();
       setState(() => _showAmountInput = false);
       _showSuccessPopup("Amount saved successfully!");
       // Debug log
       print('Saved amount $parsed to totalSaved for user ${user.uid}');
     }
+  }
+
+  Widget _buildDailySavingsInput() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: Colors.blue.withOpacity(0.1),
+                child: const Icon(Icons.savings, color: Colors.blue, size: 20),
+              ),
+              const SizedBox(width: 15),
+              const Expanded(
+                child: Text(
+                  "Daily Savings Tracker",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          TextField(
+            controller: _amountController,
+            decoration: InputDecoration(
+              hintText: "Enter amount saved today",
+              hintStyle: TextStyle(color: Colors.grey.shade400),
+              filled: true,
+              fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[900] : Colors.grey[100],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide.none,
+              ),
+              suffixIcon: Container(
+                margin: const EdgeInsets.all(5),
+                decoration: const BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.save, color: Colors.white, size: 18),
+                  onPressed: () {
+                    _saveToDatabase(_amountController.text);
+                  },
+                ),
+              ),
+            ),
+            keyboardType: TextInputType.number,
+          ),
+        ],
+      ),
+    );
   }
 
   void _openArticleAndQuiz() async {

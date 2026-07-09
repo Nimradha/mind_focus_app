@@ -98,93 +98,100 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-                widget.exercise.title,
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)
-            ),
-            const SizedBox(height: 20),
-
-            // Image Section
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.asset(
-                widget.exercise.imagePath,
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 200,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.image_not_supported),
-                ),
-              ),
-            ),
-            const SizedBox(height: 25),
-
-            _buildInstructionsCard(widget.exercise.instructions, context),
-            const SizedBox(height: 25),
-
-            Row(
-              children: [
-                _buildInfoTile(Icons.timer, "DURATION", widget.exercise.duration),
-              ],
-            ),
-            const SizedBox(height: 40),
-
-            // Start button — always visible
-            ElevatedButton(
-              onPressed: _taskCompleted ? null : _onStartPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _taskCompleted
-                    ? Colors.grey.shade400
-                    : const Color(0x880D41A1),
-                minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-              ),
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 10),
               child: Text(
-                  _taskCompleted ? "Completed ✓" : "Start",
-                  style: const TextStyle(color: Colors.white, fontSize: 18)
+                  widget.exercise.title,
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)
               ),
             ),
 
-            const SizedBox(height: 15),
+            // Image Section (Full Screen Width)
+            Image.asset(
+              widget.exercise.imagePath,
+              height: 300,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                height: 300,
+                color: Colors.grey[300],
+                child: const Icon(Icons.image_not_supported),
+              ),
+            ),
 
-            // Mark as Done — only appears after the task timer is fully completed
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 400),
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.3),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
+            const SizedBox(height: 25),
+
+            // Instructions Card (Full Screen Width)
+            _buildInstructionsCard(widget.exercise.instructions, context),
+
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      _buildInfoTile(Icons.timer, "DURATION", widget.exercise.duration),
+                    ],
                   ),
-                );
-              },
-              child: _taskCompleted
-                  ? ElevatedButton(
-                      key: const ValueKey('markAsDone'),
-                      onPressed: () {
-                        Navigator.pop(context, true);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        minimumSize: const Size(double.infinity, 55),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      ),
-                      child: const Text(
-                          "Mark as Done",
-                          style: TextStyle(color: Colors.white, fontSize: 18)
-                      ),
-                    )
-                  : const SizedBox.shrink(key: ValueKey('empty')),
+                  const SizedBox(height: 40),
+
+                  // Start button — always visible
+                  ElevatedButton(
+                    onPressed: _taskCompleted ? null : _onStartPressed,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _taskCompleted
+                          ? Colors.grey.shade400
+                          : const Color(0x880D41A1),
+                      minimumSize: const Size(double.infinity, 55),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    ),
+                    child: Text(
+                        _taskCompleted ? "Completed ✓" : "Start",
+                        style: const TextStyle(color: Colors.white, fontSize: 18)
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  // Mark as Done — only appears after the task timer is fully completed
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    transitionBuilder: (Widget child, Animation<double> animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.3),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _taskCompleted
+                        ? ElevatedButton(
+                            key: const ValueKey('markAsDone'),
+                            onPressed: () {
+                              Navigator.pop(context, true);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              minimumSize: const Size(double.infinity, 55),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                            ),
+                            child: const Text(
+                                "Mark as Done",
+                                style: TextStyle(color: Colors.white, fontSize: 18)
+                            ),
+                          )
+                        : const SizedBox.shrink(key: ValueKey('empty')),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -200,7 +207,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[850] : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.zero,
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
           ]

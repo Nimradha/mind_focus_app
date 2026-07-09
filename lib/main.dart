@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'provider/theme_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_wrapper.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,12 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await Alarm.init();
+  
+  // Initialize Notification Service
+  final notificationService = NotificationService();
+  await notificationService.init();
+  await notificationService.requestPermissions();
+
   runApp(const MyApp());
 }
 

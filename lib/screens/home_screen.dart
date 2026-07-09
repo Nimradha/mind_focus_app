@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'details.dart';
+import '../services/notification_service.dart';
 import 'task_intro_screen.dart';
 import '../widgets/animated_page_route.dart';
 import 'achievement_screen.dart';
@@ -173,11 +174,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           // If the document doesn't exist (new user), stop loading so the UI can render
           setState(() => _isLoading = false);
         }
+        _scheduleDailyReminder();
       } catch (e) {
         debugPrint("Error loading: $e");
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _scheduleDailyReminder() {
+    NotificationService().scheduleDaily10AMCheck(_isDoneList);
   }
 
   void _updateFirebaseList() async {
@@ -465,6 +471,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       setState(() {
         _isDoneList[index] = true;
       });
+      _scheduleDailyReminder();
 
       // 3. Sync to Firebase
       final user = FirebaseAuth.instance.currentUser;
@@ -725,6 +732,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               setState(() {
                _isDoneList[index] = !_isDoneList[index];
               });
+              _scheduleDailyReminder();
               final user = FirebaseAuth.instance.currentUser;
               if (user != null) {
                 try {
@@ -803,6 +811,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 setState(() {
                   _isDoneList[index] = true;
                 });
+                _scheduleDailyReminder();
 
                 final user = FirebaseAuth.instance.currentUser;
                 if (user != null) {
@@ -989,7 +998,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (title.contains("somatic")) {
       return "assets/images/somaticdetail.png";
     } else if (title.contains("labeling")) {
-      return "assets/images/labeling1.png";
+      return "assets/images/labeldetail.png";
     }
     return "assets/images/imagination.png";
   }

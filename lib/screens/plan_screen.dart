@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'pdf_viewer_screen.dart';
+import 'social_media_delay_intro_screen.dart';
+import 'food_delay_screen.dart';
 
 class PlanScreen extends StatefulWidget {
   final bool isVisible;
@@ -785,6 +787,14 @@ Column(
     );
   }
 
+  Widget _buildBadge(String label, Color bg, Color text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
+      child: Text(label, style: TextStyle(color: text, fontSize: 10, fontWeight: FontWeight.bold)),
+    );
+  }
+
   Widget _buildArticleTask(String title, String sub) {
     bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
     return _taskContainer(
@@ -792,37 +802,56 @@ Column(
       sub: sub,
       icon: Icons.article,
       color: Colors.purple,
-      action: Checkbox(
-        value: isChecked,
-        onChanged: (val) {
-          if (val == true) {
-            setState(() => _challengeChecked['${programDay}_$title'] = val!);
-            _saveChallengeState('${programDay}_$title', val!);
-            _updateMarks(2);
-            _openArticleAndQuiz();
-          }
-        },
-      ),
+      action: isChecked
+          ? _buildBadge("DONE", Colors.green.shade100, Colors.green)
+          : ElevatedButton(
+              onPressed: () => _startArticleChallenge(title, sub),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.black
+                    : Colors.white,
+                elevation: 0,
+                shape: const StadiumBorder(),
+                side: BorderSide(color: Colors.green.shade100),
+              ),
+              child: Text(
+                "Start",
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.green.shade800
+                      : Colors.green,
+                ),
+              ),
+            ),
     );
   }
 
   Widget _buildSimpleDelayTask(String title, int marks, {bool showImage = false}) {
     bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
-    return _taskContainer(
-      title: title,
-      sub: "Mental Discipline",
-      icon: Icons.timer,
-      color: Colors.orange,
-      action: Checkbox(
-        value: isChecked,
-        onChanged: (val) {
-          if (val == true) {
-            setState(() => _challengeChecked['${programDay}_$title'] = val!);
-            _saveChallengeState('${programDay}_$title', val!);
-            _updateMarks(marks);
-            if (showImage) _showAchievementImage();
-          }
-        },
+    return GestureDetector(
+      onTap: isChecked
+          ? null
+          : () => _startSimpleDelayChallenge(title, marks, showImage),
+      child: _taskContainer(
+        title: title,
+        sub: "Mental Discipline",
+        icon: Icons.timer,
+        color: Colors.orange,
+        action: IgnorePointer(
+          ignoring: !isChecked,
+          child: Checkbox(
+            value: isChecked,
+            onChanged: (val) {
+              if (val == false) {
+                setState(() {
+                  _challengeChecked['${programDay}_$title'] = false;
+                });
+                _saveChallengeState('${programDay}_$title', false);
+                _updateMarks(-marks);
+              }
+            },
+          ),
+        ),
       ),
     );
   }
@@ -1150,18 +1179,59 @@ void _updateMarks(int points) async {
     );
   }
 
-  void _openArticleAndQuiz() async {
+  void _startArticleChallenge(String title, String sub) async {
+    int durationMinutes = 15;
+    if (title.contains("30")) {
+      durationMinutes = 30;
+    } else if (title.contains("45")) {
+      durationMinutes = 45;
+    }
+
     final completed = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const PdfViewerScreen(
+        builder: (context) => SocialMediaDelayIntroScreen(
           pdfPath: 'assets/docs/article1.pdf',
-          title: '15 min social media delay',
+          title: title,
+          durationMinutes: durationMinutes,
         ),
       ),
     );
+
     if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(2);
       _showSuccessPopup("Article read successfully!");
+    }
+  }
+
+  void _startSimpleDelayChallenge(String title, int marks, bool showImage) async {
+    int durationMinutes = 5;
+    if (title.contains("10")) {
+      durationMinutes = 10;
+    } else if (title.contains("20")) {
+      durationMinutes = 20;
+    } else if (title.contains("30")) {
+      durationMinutes = 30;
+    }
+
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FoodDelayScreen(durationMinutes: durationMinutes),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
+      if (showImage) _showAchievementImage();
     }
   }
 

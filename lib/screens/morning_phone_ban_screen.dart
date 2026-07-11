@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-class MeditationFocusScreen extends StatefulWidget {
+class MorningPhoneBanScreen extends StatefulWidget {
   final String title;
-  const MeditationFocusScreen({super.key, required this.title});
+  const MorningPhoneBanScreen({super.key, required this.title});
 
   @override
-  State<MeditationFocusScreen> createState() => _MeditationFocusScreenState();
+  State<MorningPhoneBanScreen> createState() => _MorningPhoneBanScreenState();
 }
 
-class _MeditationFocusScreenState extends State<MeditationFocusScreen> {
+class _MorningPhoneBanScreenState extends State<MorningPhoneBanScreen> {
   int _visibleWordCount = 0;
   Timer? _wordTimer;
 
@@ -25,14 +25,23 @@ class _MeditationFocusScreenState extends State<MeditationFocusScreen> {
   void initState() {
     super.initState();
 
-    final String duration = widget.title.split(' ')[0];
+    // Determine duration: "1 hour" (60 min) if title contains "1 hour", else "30 minutes"
+    final String duration = widget.title.toLowerCase().contains('1 hour')
+        ? '60'
+        : '30';
 
-    sec1Words = "Target: Sustained Focus & Neural Reps".split(' ');
-    sec2Words = "Attention is a muscle. Today, you take it to the gym.".split(' ');
+    sec1Words = "Target: Default Mode Network (DMN) Reset".split(' ');
+    sec2Words =
+        "Spiking your brain with cheap dopamine the minute you wake up destroys your focus for the entire day. Today, you protect the first hour."
+            .split(' ');
     sec3Words = "Instructions:".split(' ');
-    sec4Words = "Set the $duration-minute timer. Close your eyes. Focus 100% of your attention on a single point (your breathing). Your mind will wander. That is natural. The moment you realize you are distracted, gently pull your focus back to the breath.".split(' ');
+    sec4Words =
+        "For the first $duration minutes after waking up, absolutely zero screen time. No messages, no social media, no news. Hydrate, plan your day, or sit in silence."
+            .split(' ');
     sec5Words = "Why this works:".split(' ');
-    sec6Words = "The magic doesn't happen when you are perfectly focused. The \"rep\" happens at the exact moment you catch your mind wandering and force it back. Each return is a neural push-up for your Prefrontal Cortex, upgrading your ability to concentrate deeply in high-pressure clinical or academic environments.".split(' ');
+    sec6Words =
+        "Waking up naturally allows your brain's Default Mode Network to boot up without external synthetic stimulation. By defending this crucial morning window, you preserve your baseline dopamine levels, ensuring you have the raw drive and sustained energy needed for heavy cognitive tasks later in the day."
+            .split(' ');
 
     totalWords = sec1Words.length +
         sec2Words.length +
@@ -62,7 +71,8 @@ class _MeditationFocusScreenState extends State<MeditationFocusScreen> {
     super.dispose();
   }
 
-  Widget _buildAnimatedText(List<String> words, int startIndex, {TextStyle? style}) {
+  Widget _buildAnimatedText(List<String> words, int startIndex,
+      {TextStyle? style}) {
     return Wrap(
       children: [
         for (int i = 0; i < words.length; i++)
@@ -77,10 +87,7 @@ class _MeditationFocusScreenState extends State<MeditationFocusScreen> {
               curve: Curves.easeOut,
               child: Padding(
                 padding: const EdgeInsets.only(right: 4.0, bottom: 2.0),
-                child: Text(
-                  words[i],
-                  style: style,
-                ),
+                child: Text(words[i], style: style),
               ),
             ),
           ),
@@ -93,31 +100,44 @@ class _MeditationFocusScreenState extends State<MeditationFocusScreen> {
     int idx = 0;
 
     final w1 = _buildAnimatedText(sec1Words, idx,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.purpleAccent));
+        style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Colors.amberAccent));
     idx += sec1Words.length;
 
     final w2 = _buildAnimatedText(sec2Words, idx,
-        style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.4));
+        style: const TextStyle(
+            fontSize: 14, color: Colors.white70, height: 1.4));
     idx += sec2Words.length;
 
     final w3 = _buildAnimatedText(sec3Words, idx,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.cyanAccent));
+        style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Colors.cyanAccent));
     idx += sec3Words.length;
 
     final w4 = _buildAnimatedText(sec4Words, idx,
-        style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.4));
+        style: const TextStyle(
+            fontSize: 14, color: Colors.white70, height: 1.4));
     idx += sec4Words.length;
 
     final w5 = _buildAnimatedText(sec5Words, idx,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.orangeAccent));
+        style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+            color: Colors.orangeAccent));
     idx += sec5Words.length;
 
     final w6 = _buildAnimatedText(sec6Words, idx,
-        style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.4));
+        style: const TextStyle(
+            fontSize: 14, color: Colors.white70, height: 1.4));
     idx += sec6Words.length;
 
     final double screenHeight = MediaQuery.of(context).size.height;
-    final double bottomButtonAreaHeight = MediaQuery.of(context).padding.bottom + 105;
+    final double bottomButtonAreaHeight =
+        MediaQuery.of(context).padding.bottom + 105;
 
     return Scaffold(
       body: Stack(
@@ -125,12 +145,12 @@ class _MeditationFocusScreenState extends State<MeditationFocusScreen> {
           // 1. Full Screen Background Image
           Positioned.fill(
             child: Image.asset(
-              'assets/images/meditation_focus.png',
+              'assets/images/morning_phoneBan.png',
               fit: BoxFit.cover,
             ),
           ),
 
-          // 2. Bottom-only gradient overlay — keeps top image sharp
+          // 2. Bottom-only gradient — keeps top of image sharp
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -148,10 +168,10 @@ class _MeditationFocusScreenState extends State<MeditationFocusScreen> {
             ),
           ),
 
-          // 3. Scrollable Content Card in the bottom half of the screen
+          // 3. Scrollable card — starts from screen midpoint, ends above button
           Positioned(
-            top: screenHeight * 0.42, // Starts from the middle of the screen
-            bottom: bottomButtonAreaHeight, // Ends just above the bottom button
+            top: screenHeight * 0.42,
+            bottom: bottomButtonAreaHeight,
             left: 20,
             right: 20,
             child: Container(
@@ -201,16 +221,14 @@ class _MeditationFocusScreenState extends State<MeditationFocusScreen> {
             ),
           ),
 
-          // 5. "Mark as Done" Button at bottom
+          // 5. "Mark as Done" button at the bottom
           Positioned(
             bottom: 30,
             left: 20,
             right: 20,
             child: SafeArea(
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context, true);
-                },
+                onPressed: () => Navigator.pop(context, true),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
@@ -222,10 +240,7 @@ class _MeditationFocusScreenState extends State<MeditationFocusScreen> {
                 ),
                 child: const Text(
                   'Mark as Done',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),

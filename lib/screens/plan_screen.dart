@@ -8,6 +8,8 @@ import 'social_media_delay_intro_screen.dart';
 import 'food_delay_screen.dart';
 import 'no_complaint_screen.dart';
 import 'meditation_focus_screen.dart';
+import 'morning_phone_ban_screen.dart';
+import 'no_scroll_food_screen.dart';
 
 class PlanScreen extends StatefulWidget {
   final bool isVisible;
@@ -179,28 +181,13 @@ class _PlanScreenState extends State<PlanScreen> {
         case 4: // Day 4
           return [
             _buildSimpleDelayTask("Delay 5 minutes from taking your favorite food item", 2),
-            _taskContainer(
-              title: "No-scroll during meals",
-              sub: "Place phone down at every meal",
-              icon: Icons.no_meals,
-              color: Colors.teal,
-              action: Checkbox(
-                value: _challengeChecked['${programDay}_No-scroll during meals'] ?? false,
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() => _challengeChecked['${programDay}_No-scroll during meals'] = val);
-                    _saveChallengeState('${programDay}_No-scroll during meals', val);
-                    _updateMarks(val ? 2 : -2);
-                  }
-                },
-              ),
-            ),
+            _buildNoScrollFoodTask(),
           ];
         case 5: // Day 5
           return [
-            _buildSimpleDelayTask("Delay 5 minutes from taking your favorite food item", 2, showImage: true),
+            _buildSimpleDelayTask("Delay 5 minutes from taking your favorite food item", 2),
             const SizedBox(height: 15),
-            _buildArticleTask("15 min social media delay", "Read the given article to improve focus"),
+            _buildArticleTask("10 min social media delay", "Read the given article to improve focus"),
           ];
         case 6: // Day 6
           return [
@@ -839,20 +826,48 @@ Column(
     );
   }
 
-  Widget _buildSimpleDelayTask(String title, int marks, {bool showImage = false}) {
+  Widget _buildSimpleDelayTask(String title, int marks) {
     bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
     final bool useFoodDelayScreen = (programDay == 4 || programDay == 5 || programDay == 6 || programDay == 10);
+    final bool useMorningPhoneBanScreen = (programDay == 19 || programDay == 23);
 
     if (useFoodDelayScreen) {
       return GestureDetector(
         onTap: isChecked
             ? null
-            : () => _startSimpleDelayChallenge(title, marks, showImage),
+            : () => _startSimpleDelayChallenge(title, marks),
         child: _taskContainer(
           title: title,
           sub: "Mental Discipline",
           icon: Icons.timer,
           color: Colors.orange,
+          action: IgnorePointer(
+            ignoring: !isChecked,
+            child: Checkbox(
+              value: isChecked,
+              onChanged: (val) {
+                if (val == false) {
+                  setState(() {
+                    _challengeChecked['${programDay}_$title'] = false;
+                  });
+                  _saveChallengeState('${programDay}_$title', false);
+                  _updateMarks(-marks);
+                }
+              },
+            ),
+          ),
+        ),
+      );
+    } else if (useMorningPhoneBanScreen) {
+      return GestureDetector(
+        onTap: isChecked
+            ? null
+            : () => _startMorningPhoneBanChallenge(title, marks),
+        child: _taskContainer(
+          title: title,
+          sub: "Mental Discipline",
+          icon: Icons.phone_disabled,
+          color: Colors.indigo,
           action: IgnorePointer(
             ignoring: !isChecked,
             child: Checkbox(
@@ -884,9 +899,6 @@ Column(
             });
             _saveChallengeState('${programDay}_$title', val ?? false);
             _updateMarks(val == true ? marks : -marks);
-            if (val == true && showImage) {
-              _showAchievementImage();
-            }
           },
         ),
       );
@@ -931,6 +943,54 @@ Column(
       context,
       MaterialPageRoute(
         builder: (context) => const NoComplaintScreen(),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
+    }
+  }
+
+  Widget _buildNoScrollFoodTask() {
+    const String title = "No-scroll during meals";
+    const int marks = 2;
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
+
+    return GestureDetector(
+      onTap: isChecked ? null : () => _startNoScrollFoodChallenge(title, marks),
+      child: _taskContainer(
+        title: title,
+        sub: "Place phone down at every meal",
+        icon: Icons.no_meals,
+        color: Colors.teal,
+        action: IgnorePointer(
+          ignoring: !isChecked,
+          child: Checkbox(
+            value: isChecked,
+            onChanged: (val) {
+              if (val == false) {
+                setState(() {
+                  _challengeChecked['${programDay}_$title'] = false;
+                });
+                _saveChallengeState('${programDay}_$title', false);
+                _updateMarks(-marks);
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _startNoScrollFoodChallenge(String title, int marks) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NoScrollFoodScreen(),
       ),
     );
 
@@ -1109,7 +1169,7 @@ Column(
     final completed = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const MeditationFocusScreen(),
+        builder: (context) => MeditationFocusScreen(title: title),
       ),
     );
 
@@ -1324,7 +1384,7 @@ void _updateMarks(int points) async {
     }
   }
 
-  void _startSimpleDelayChallenge(String title, int marks, bool showImage) async {
+  void _startSimpleDelayChallenge(String title, int marks) async {
     int durationMinutes = 5;
     if (title.contains("10")) {
       durationMinutes = 10;
@@ -1347,7 +1407,23 @@ void _updateMarks(int points) async {
       });
       _saveChallengeState('${programDay}_$title', true);
       _updateMarks(marks);
-      if (showImage) _showAchievementImage();
+    }
+  }
+
+  void _startMorningPhoneBanChallenge(String title, int marks) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MorningPhoneBanScreen(title: title),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
     }
   }
 

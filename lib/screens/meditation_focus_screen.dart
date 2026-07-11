@@ -1,28 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../widgets/animated_start_button.dart';
-import '../widgets/animated_page_route.dart';
-import 'pdf_viewer_screen.dart';
 
-class SocialMediaDelayIntroScreen extends StatefulWidget {
-  final String pdfPath;
-  final String title;
-  final int durationMinutes;
-
-  const SocialMediaDelayIntroScreen({
-    super.key,
-    required this.pdfPath,
-    required this.title,
-    required this.durationMinutes,
-  });
+class MeditationFocusScreen extends StatefulWidget {
+  const MeditationFocusScreen({super.key});
 
   @override
-  State<SocialMediaDelayIntroScreen> createState() =>
-      _SocialMediaDelayIntroScreenState();
+  State<MeditationFocusScreen> createState() => _MeditationFocusScreenState();
 }
 
-class _SocialMediaDelayIntroScreenState
-    extends State<SocialMediaDelayIntroScreen> {
+class _MeditationFocusScreenState extends State<MeditationFocusScreen> {
   int _visibleWordCount = 0;
   Timer? _wordTimer;
 
@@ -38,18 +24,12 @@ class _SocialMediaDelayIntroScreenState
   void initState() {
     super.initState();
 
-    sec1Words = "Target: dLPFC Impulse Override".split(' ');
-    sec2Words =
-        "When the sudden urge to open a social media app hits, STOP. This is an automatic dopamine loop originating from your primitive brain."
-            .split(' ');
+    sec1Words = "Target: Prefrontal Cortex Regulation".split(' ');
+    sec2Words = "Meditation is the practice of training attention and awareness. By consciously directing your focus back to your breath, you strengthen the prefrontal cortex—the brain's executive control center.".split(' ');
     sec3Words = "Instructions:".split(' ');
-    sec4Words =
-        "Start the ${widget.durationMinutes}-minute delay timer. Do not touch your social media apps. Instead, read the attached high-value article below."
-            .split(' ');
+    sec4Words = "Sit comfortably with your back straight. Close your eyes. Take deep, slow breaths. Whenever your mind drifts (which it will), gently and without judgment bring your attention back to the sensation of breathing.".split(' ');
     sec5Words = "Why this works:".split(' ');
-    sec6Words =
-        "By consciously resisting this urge, you are engaging your dLPFC (Dorsolateral Prefrontal Cortex)—the brain's command center for impulse control. Each time you override this primitive signal, you are physically strengthening your dLPFC, turning it into an unbreakable brake system for your impulses. Take control."
-            .split(' ');
+    sec6Words = "Every time you catch your mind wandering and pull it back, you perform a mental 'rep' for your prefrontal cortex. This physically increases gray matter density in regions associated with attention, emotional regulation, and self-control.".split(' ');
 
     totalWords = sec1Words.length +
         sec2Words.length +
@@ -79,8 +59,7 @@ class _SocialMediaDelayIntroScreenState
     super.dispose();
   }
 
-  Widget _buildAnimatedText(List<String> words, int startIndex,
-      {TextStyle? style}) {
+  Widget _buildAnimatedText(List<String> words, int startIndex, {TextStyle? style}) {
     return Wrap(
       children: [
         for (int i = 0; i < words.length; i++)
@@ -95,7 +74,10 @@ class _SocialMediaDelayIntroScreenState
               curve: Curves.easeOut,
               child: Padding(
                 padding: const EdgeInsets.only(right: 4.0, bottom: 2.0),
-                child: Text(words[i], style: style),
+                child: Text(
+                  words[i],
+                  style: style,
+                ),
               ),
             ),
           ),
@@ -108,45 +90,31 @@ class _SocialMediaDelayIntroScreenState
     int idx = 0;
 
     final w1 = _buildAnimatedText(sec1Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Colors.cyanAccent));
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.purpleAccent));
     idx += sec1Words.length;
 
     final w2 = _buildAnimatedText(sec2Words, idx,
-        style: const TextStyle(
-            fontSize: 14, color: Colors.white70, height: 1.4));
+        style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.4));
     idx += sec2Words.length;
 
     final w3 = _buildAnimatedText(sec3Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Colors.greenAccent));
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.cyanAccent));
     idx += sec3Words.length;
 
     final w4 = _buildAnimatedText(sec4Words, idx,
-        style: const TextStyle(
-            fontSize: 14, color: Colors.white70, height: 1.4));
+        style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.4));
     idx += sec4Words.length;
 
     final w5 = _buildAnimatedText(sec5Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-            color: Colors.orangeAccent));
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.orangeAccent));
     idx += sec5Words.length;
 
     final w6 = _buildAnimatedText(sec6Words, idx,
-        style: const TextStyle(
-            fontSize: 14, color: Colors.white70, height: 1.4));
+        style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.4));
     idx += sec6Words.length;
 
     final double screenHeight = MediaQuery.of(context).size.height;
-    // Bottom area = SafeArea bottom + button height (≈80) + some padding
-    final double bottomButtonAreaHeight =
-        MediaQuery.of(context).padding.bottom + 110;
+    final double bottomButtonAreaHeight = MediaQuery.of(context).padding.bottom + 105;
 
     return Scaffold(
       body: Stack(
@@ -154,7 +122,7 @@ class _SocialMediaDelayIntroScreenState
           // 1. Full Screen Background Image
           Positioned.fill(
             child: Image.asset(
-              'assets/images/social_media_delay.png',
+              'assets/images/meditation_focus.png',
               fit: BoxFit.cover,
             ),
           ),
@@ -177,10 +145,10 @@ class _SocialMediaDelayIntroScreenState
             ),
           ),
 
-          // 3. Scrollable Text Card — starts from screen mid, ends above button
+          // 3. Scrollable Content Card in the bottom half of the screen
           Positioned(
-            top: screenHeight * 0.42,
-            bottom: bottomButtonAreaHeight,
+            top: screenHeight * 0.42, // Starts from the middle of the screen
+            bottom: bottomButtonAreaHeight, // Ends just above the bottom button
             left: 20,
             right: 20,
             child: Container(
@@ -214,7 +182,7 @@ class _SocialMediaDelayIntroScreenState
             ),
           ),
 
-          // 4. Back Button
+          // 4. Floating Back Button
           Positioned(
             top: MediaQuery.of(context).padding.top + 10,
             left: 15,
@@ -230,29 +198,32 @@ class _SocialMediaDelayIntroScreenState
             ),
           ),
 
-          // 5. Animated Start Button at the bottom right
+          // 5. "Mark as Done" Button at bottom
           Positioned(
-            bottom: 20,
-            right: 24,
+            bottom: 30,
+            left: 20,
+            right: 20,
             child: SafeArea(
-              top: false,
-              child: AnimatedStartButton(
-                onPressed: () async {
-                  final navigator = Navigator.of(context);
-                  await Future.delayed(const Duration(milliseconds: 400));
-                  final result = await navigator.push(
-                    AnimatedPageRoute(
-                      page: PdfViewerScreen(
-                        pdfPath: widget.pdfPath,
-                        title: widget.title,
-                        durationMinutes: widget.durationMinutes,
-                      ),
-                    ),
-                  );
-                  if (result == true) {
-                    navigator.pop(true);
-                  }
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, true);
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'Mark as Done',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ),

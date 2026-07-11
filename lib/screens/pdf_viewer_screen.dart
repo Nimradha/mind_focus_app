@@ -27,8 +27,8 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   late int _secondsRemaining;
   Timer? _timer;
   bool _isCompleted = false;
-  // A debug toggle flag that developers can set to true to test the timer in seconds instead of minutes
-  static const bool _useSecondsForTesting = kDebugMode;
+  // Set to true to test the timer in seconds instead of minutes (debug only)
+  static const bool _useSecondsForTesting = false;
 
   @override
   void initState() {

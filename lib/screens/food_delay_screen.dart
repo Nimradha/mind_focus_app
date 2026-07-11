@@ -168,10 +168,21 @@ class _FoodDelayScreenState extends State<FoodDelayScreen> {
             ),
           ),
 
-          // 2. Dark Overlay
+          // 2. Bottom-only gradient overlay — keeps top image sharp
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.5),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.15),
+                    Colors.black.withOpacity(0.7),
+                  ],
+                  stops: const [0.0, 0.35, 1.0],
+                ),
+              ),
             ),
           ),
 

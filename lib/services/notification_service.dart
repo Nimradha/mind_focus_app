@@ -146,6 +146,7 @@ class NotificationService {
           priority: Priority.high,
           playSound: true,
           enableVibration: true,
+          largeIcon: DrawableResourceAndroidBitmap('ic_launcher'),
         ),
         iOS: const DarwinNotificationDetails(
           presentAlert: true,

@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'pdf_viewer_screen.dart';
 import 'social_media_delay_intro_screen.dart';
 import 'food_delay_screen.dart';
+import 'no_complaint_screen.dart';
+import 'meditation_focus_screen.dart';
 
 class PlanScreen extends StatefulWidget {
   final bool isVisible;
@@ -175,7 +177,25 @@ class _PlanScreenState extends State<PlanScreen> {
         case 3: // Day 3
           return [_buildArticleTask("15 min social media delay", "Read the given article to improve focus")];
         case 4: // Day 4
-          return [_buildSimpleDelayTask("Delay 5 minutes from taking your favorite food item", 2)];
+          return [
+            _buildSimpleDelayTask("Delay 5 minutes from taking your favorite food item", 2),
+            _taskContainer(
+              title: "No-scroll during meals",
+              sub: "Place phone down at every meal",
+              icon: Icons.no_meals,
+              color: Colors.teal,
+              action: Checkbox(
+                value: _challengeChecked['${programDay}_No-scroll during meals'] ?? false,
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _challengeChecked['${programDay}_No-scroll during meals'] = val);
+                    _saveChallengeState('${programDay}_No-scroll during meals', val);
+                    _updateMarks(val ? 2 : -2);
+                  }
+                },
+              ),
+            ),
+          ];
         case 5: // Day 5
           return [
             _buildSimpleDelayTask("Delay 5 minutes from taking your favorite food item", 2, showImage: true),
@@ -183,28 +203,15 @@ class _PlanScreenState extends State<PlanScreen> {
             _buildArticleTask("15 min social media delay", "Read the given article to improve focus"),
           ];
         case 6: // Day 6
-          return [_buildSimpleDelayTask("Delay 10 minutes from food & think of benefits", 2)];
+          return [
+            _buildSimpleDelayTask("Delay 10 minutes from taking your favorite food item", 2),
+            _buildNoComplaintTask(),
+          ];
         case 7: // Day 7
           return [_buildSavingsTask("Never buy the food that you feel to buy","Enter the amount you saved today")];
           case 8: // Day 8
             return [
-              // Meditation task without start button
-              _taskContainer(
-                title: "10 min meditation – focus on breathing",
-                sub: "Sit comfortably, close your eyes, and follow the breath.",
-                icon: Icons.self_improvement,
-                color: Colors.indigo,
-                 action: Checkbox(
-                      value: _challengeChecked['${programDay}_10 min meditation – focus on breathing'] ?? false,
-                      onChanged: (val) {
-                        if (val == true) {
-                          setState(() => _challengeChecked['${programDay}_10 min meditation – focus on breathing'] = val!);
-                          _saveChallengeState('${programDay}_10 min meditation – focus on breathing', val!);
-                          _updateMarks(2);
-                        }
-                      },
-                    ),
-              ),
+              _buildMeditationTask("10 min meditation – focus on breathing", "Sit comfortably, close your eyes, and follow the breath."),
               Divider(
                  height: 1,
                  thickness: 1,
@@ -264,7 +271,7 @@ class _PlanScreenState extends State<PlanScreen> {
             return [_buildArticleTask("30 min social media delay", "Read the given article to improve focus")];
           case 10: // Day 10 
             return [
-              _buildSimpleDelayTask("10 min food delay – Evaluate the cost and health value of reducing food consumption", 2),
+              _buildSimpleDelayTask("Delay 10 minutes from taking your favorite food item", 2),
               Divider(
                 height: 1,
                 thickness: 1,
@@ -294,7 +301,7 @@ class _PlanScreenState extends State<PlanScreen> {
             ];
           case 12: // Day 12
             return [
-              _buildSimpleDelayTask("20 min food delay", 2),
+              _buildSimpleDelayTask("20 min food delay – Evaluate the cost and health value of reducing food consumption", 2),
               Divider(
                 height: 1,
                 thickness: 1,
@@ -343,7 +350,11 @@ Column(
 ),
             ];
           case 13: // Day 13
-          return [_buildArticleTask("30 min social media delay", "Read the given article to improve focus")];
+            return [
+              _buildArticleTask("15 min social media delay", "Read the given article to improve focus"),
+              const SizedBox(height: 15),
+              _buildNoComplaintTask(),
+            ];
           case 14: // Day 14
               return [
                 // First reminder without button
@@ -483,9 +494,9 @@ Column(
               return [
                 _buildSimpleDelayTask("30 min food delay – Evaluate the cost and health value of reducing food consumption", 2),
               ];
-            case 17: // Day 17
+  case 17: // Day 17
               return [
-                _buildArticleTask("45 min social media delay", "Read the given article to improve focus"),
+                _buildArticleTask("30 min social media delay", "Read the given article to improve focus"),
                 Divider(
                   height: 1,
                   thickness: 1,
@@ -536,10 +547,12 @@ Column(
             case 20: // Day 20
               return [
                 _buildReminderTask("3‑minute pause","Whenever you feel something that distracts your feelings - name it, pause 3 min before acting."),
+                const SizedBox(height: 15),
+                _buildNoComplaintTask(),
               ];
             case 21: // Day 21
               return [
-                _buildArticleTask("45 min social media delay", "Read the given article to improve focus"),
+                _buildArticleTask("30 min social media delay", "Read the given article to improve focus"),
               ];
             case 22: // Day 22
               return [
@@ -573,7 +586,7 @@ Column(
               ];
             case 24: // Day 24
               return [
-                _buildSimpleDelayTask("1 hour food delay – Evaluate identity : does this serve who I want to become?", 2),
+                _buildSimpleDelayTask("30 min food delay – Evaluate identity : does this serve who I want to become?", 2),
                 Divider(
                   height: 1,
                   thickness: 1,
@@ -828,15 +841,72 @@ Column(
 
   Widget _buildSimpleDelayTask(String title, int marks, {bool showImage = false}) {
     bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
-    return GestureDetector(
-      onTap: isChecked
-          ? null
-          : () => _startSimpleDelayChallenge(title, marks, showImage),
-      child: _taskContainer(
+    final bool useFoodDelayScreen = (programDay == 4 || programDay == 5 || programDay == 6 || programDay == 10);
+
+    if (useFoodDelayScreen) {
+      return GestureDetector(
+        onTap: isChecked
+            ? null
+            : () => _startSimpleDelayChallenge(title, marks, showImage),
+        child: _taskContainer(
+          title: title,
+          sub: "Mental Discipline",
+          icon: Icons.timer,
+          color: Colors.orange,
+          action: IgnorePointer(
+            ignoring: !isChecked,
+            child: Checkbox(
+              value: isChecked,
+              onChanged: (val) {
+                if (val == false) {
+                  setState(() {
+                    _challengeChecked['${programDay}_$title'] = false;
+                  });
+                  _saveChallengeState('${programDay}_$title', false);
+                  _updateMarks(-marks);
+                }
+              },
+            ),
+          ),
+        ),
+      );
+    } else {
+      return _taskContainer(
         title: title,
         sub: "Mental Discipline",
         icon: Icons.timer,
         color: Colors.orange,
+        action: Checkbox(
+          value: isChecked,
+          onChanged: (val) {
+            setState(() {
+              _challengeChecked['${programDay}_$title'] = val ?? false;
+            });
+            _saveChallengeState('${programDay}_$title', val ?? false);
+            _updateMarks(val == true ? marks : -marks);
+            if (val == true && showImage) {
+              _showAchievementImage();
+            }
+          },
+        ),
+      );
+    }
+  }
+
+  Widget _buildNoComplaintTask() {
+    final String title = "No complaint day";
+    final int marks = 2;
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
+
+    return GestureDetector(
+      onTap: isChecked
+          ? null
+          : () => _startNoComplaintChallenge(title, marks),
+      child: _taskContainer(
+        title: title,
+        sub: "Catch every complaint, reframe as neural observation",
+        icon: Icons.self_improvement,
+        color: Colors.purple,
         action: IgnorePointer(
           ignoring: !isChecked,
           child: Checkbox(
@@ -854,6 +924,23 @@ Column(
         ),
       ),
     );
+  }
+
+  void _startNoComplaintChallenge(String title, int marks) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NoComplaintScreen(),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
+    }
   }
 
   Widget _taskContainer({
@@ -988,22 +1075,51 @@ Column(
     // Meditation task widget
   Widget _buildMeditationTask(String title, String sub) {
     bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
-    return _taskContainer(
-      title: title,
-      sub: sub,
-      icon: Icons.self_improvement,
-      color: Colors.indigo,
-      action: Checkbox(
-        value: isChecked,
-        onChanged: (val) {
-          if (val == true) {
-            setState(() => _challengeChecked['${programDay}_$title'] = val!);
-            _saveChallengeState('${programDay}_$title', val!);
-            _updateMarks(2);
-          }
-        },
+    final int marks = 2;
+
+    return GestureDetector(
+      onTap: isChecked
+          ? null
+          : () => _startMeditationChallenge(title, marks),
+      child: _taskContainer(
+        title: title,
+        sub: sub,
+        icon: Icons.self_improvement,
+        color: Colors.indigo,
+        action: IgnorePointer(
+          ignoring: !isChecked,
+          child: Checkbox(
+            value: isChecked,
+            onChanged: (val) {
+              if (val == false) {
+                setState(() {
+                  _challengeChecked['${programDay}_$title'] = false;
+                });
+                _saveChallengeState('${programDay}_$title', false);
+                _updateMarks(-marks);
+              }
+            },
+          ),
+        ),
       ),
     );
+  }
+
+  void _startMeditationChallenge(String title, int marks) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MeditationFocusScreen(),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
+    }
   }
 
   // Reminder task widget with optional bracketed red text

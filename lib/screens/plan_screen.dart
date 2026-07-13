@@ -10,6 +10,8 @@ import 'no_complaint_screen.dart';
 import 'meditation_focus_screen.dart';
 import 'morning_phone_ban_screen.dart';
 import 'no_scroll_food_screen.dart';
+import 'no_external_food_screen.dart';
+import 'no_scroll_screen.dart';
 
 class PlanScreen extends StatefulWidget {
   final bool isVisible;
@@ -274,13 +276,7 @@ class _PlanScreenState extends State<PlanScreen> {
                   ),
                 ),
               ),
-            _taskContainer(
-              title: "No social media scrolling at all",
-              sub: "",
-              icon: Icons.notifications,
-              color: Colors.orange,
-              action: const SizedBox.shrink(),
-            ),
+            _buildNoSocialScrollTask(),
             ];
           case 11: // Day 11 
             return [
@@ -304,37 +300,7 @@ class _PlanScreenState extends State<PlanScreen> {
                   ),
                 ),
               ),
-Column(
-  children: [
-    _taskContainer(
-      title: "No external food day",
-      sub: "Enter the amount you saved today",
-      icon: Icons.savings,
-      color: Colors.purple,
-      action: IconButton(
-        icon: const Icon(Icons.add_circle),
-        onPressed: () {
-          setState(() => _showAmountInput = true);
-        },
-      ),
-    ),
-    if (_showAmountInput)
-      Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: TextField(
-          controller: _amountController,
-          decoration: InputDecoration(
-            hintText: "Enter amount saved today",
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: () => _saveToDatabase(_amountController.text),
-            ),
-          ),
-          keyboardType: TextInputType.number,
-        ),
-      ),
-  ],
-),
+_buildNoExternalFoodTask(),
             ];
           case 13: // Day 13
             return [
@@ -469,13 +435,7 @@ Column(
                     ),
                   ),
                 ),
-                _taskContainer(
-                  title: "No social media scrolling at all",
-                  sub: "",
-                  icon: Icons.notifications,
-                  color: Colors.orange,
-                  action: const SizedBox.shrink(),
-                ),
+                _buildNoSocialScrollTask(),
               ];
             case 16: // Day 16
               return [
@@ -499,13 +459,7 @@ Column(
                     ),
                   ),
                 ),
-                        _taskContainer(
-          title: "No external food day",
-          sub: "",
-          icon: Icons.notifications,
-          color: Colors.orange,
-          action: const SizedBox.shrink(),
-        ),
+                                _buildNoExternalFoodTask(),
               ];
             case 18: // Day 18
               return [
@@ -559,13 +513,7 @@ Column(
                     ),
                   ),
                 ),
-                _taskContainer(
-                  title: "No social media scrolling at all",
-                  sub: "",
-                  icon: Icons.notifications,
-                  color: Colors.orange,
-                  action: const SizedBox.shrink(),
-                ),
+                _buildNoSocialScrollTask(),
               ];
             case 23: // Day 23
               return [
@@ -589,13 +537,7 @@ Column(
                     ),
                   ),
                 ),
-                                        _taskContainer(
-                          title: "No external food day",
-                          sub: "",
-                          icon: Icons.notifications,
-                          color: Colors.orange,
-                          action: const SizedBox.shrink(),
-                        ),
+                                _buildNoExternalFoodTask(),
               ];
             case 25: // Day 25
               return [
@@ -991,6 +933,102 @@ Column(
       context,
       MaterialPageRoute(
         builder: (context) => const NoScrollFoodScreen(),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
+    }
+  }
+
+  Widget _buildNoExternalFoodTask() {
+    const String title = "No external food day";
+    const int marks = 2;
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
+
+    return GestureDetector(
+      onTap: isChecked ? null : () => _startNoExternalFoodChallenge(title, marks),
+      child: _taskContainer(
+        title: title,
+        sub: "Consume only food you already have at home",
+        icon: Icons.no_food,
+        color: Colors.green,
+        action: IgnorePointer(
+          ignoring: !isChecked,
+          child: Checkbox(
+            value: isChecked,
+            onChanged: (val) {
+              if (val == false) {
+                setState(() {
+                  _challengeChecked['${programDay}_$title'] = false;
+                });
+                _saveChallengeState('${programDay}_$title', false);
+                _updateMarks(-marks);
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _startNoExternalFoodChallenge(String title, int marks) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NoExternalFoodScreen(),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
+    }
+  }
+
+  Widget _buildNoSocialScrollTask() {
+    const String title = "No social media scrolling at all";
+    const int marks = 2;
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
+
+    return GestureDetector(
+      onTap: isChecked ? null : () => _startNoSocialScrollChallenge(title, marks),
+      child: _taskContainer(
+        title: title,
+        sub: "Zero doomscrolling today",
+        icon: Icons.block,
+        color: Colors.deepPurple,
+        action: IgnorePointer(
+          ignoring: !isChecked,
+          child: Checkbox(
+            value: isChecked,
+            onChanged: (val) {
+              if (val == false) {
+                setState(() {
+                  _challengeChecked['${programDay}_$title'] = false;
+                });
+                _saveChallengeState('${programDay}_$title', false);
+                _updateMarks(-marks);
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _startNoSocialScrollChallenge(String title, int marks) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NoScrollScreen(),
       ),
     );
 

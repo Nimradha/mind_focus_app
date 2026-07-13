@@ -184,6 +184,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   void _scheduleDailyReminder() {
     NotificationService().scheduleDaily10AMCheck(_isDoneList);
+    NotificationService().scheduleDaily4PMCheck(_isDoneList);
   }
 
   void _updateFirebaseList() async {

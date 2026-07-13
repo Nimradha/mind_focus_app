@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -80,42 +81,91 @@ class NotificationService {
   /// Tracks indices 0 (Meditation), 1 (Word Memory Game), and 2 (Running Exercise).
   Future<void> scheduleDaily10AMCheck(List<bool> isDoneList) async {
     try {
-      // Find names of incomplete tasks
-      List<String> undoneTasks = [];
-      if (isDoneList.isEmpty || !isDoneList[0]) undoneTasks.add("Meditation");
-      if (isDoneList.length <= 1 || !isDoneList[1]) undoneTasks.add("Word Memory Game");
-      if (isDoneList.length <= 2 || !isDoneList[2]) undoneTasks.add("Running Exercise");
-
+      List<String> undoneTasks = _getUndoneTasks(isDoneList);
       const int notificationId = 100;
 
       if (undoneTasks.isEmpty) {
-        // All tasks done! Cancel notification for this checkpoint.
         await _notificationsPlugin.cancel(notificationId);
         debugPrint("NotificationService: All tasks complete. Cancelled 10 AM reminder.");
-        
-        // As a fallback, schedule tomorrow's fresh reminder since tomorrow they will start fresh
-        await _scheduleForFuture(notificationId, ["Meditation", "Word Memory Game", "Running Exercise"], isTomorrowOnly: true);
+        // Schedule tomorrow's fresh 10 AM reminder
+        await _scheduleForFuture(
+          notificationId: notificationId,
+          undoneTasks: ["Meditation", "Word Memory Game", "Running Exercise"],
+          hour: 10,
+          title: "Daily Task Reminder",
+          buildBody: (names) => "You haven't done tasks ($names) yet.But don't worry,you have the energy.Let's get started.You have power to win",
+          isTomorrowOnly: true,
+        );
       } else {
-        // Tasks remain uncompleted. Schedule/reschedule notification for next 10 AM checkpoint.
-        await _scheduleForFuture(notificationId, undoneTasks, isTomorrowOnly: false);
+        await _scheduleForFuture(
+          notificationId: notificationId,
+          undoneTasks: undoneTasks,
+          hour: 10,
+          title: "Daily Task Reminder",
+          buildBody: (names) => "You haven't done tasks ($names) yet.But don't worry,you have the energy.Let's get started.You have power to win",
+          isTomorrowOnly: false,
+        );
       }
     } catch (e) {
-      debugPrint("NotificationService: Error scheduling check: $e");
+      debugPrint("NotificationService: Error scheduling 10 AM check: $e");
     }
   }
 
-  /// Schedules the notification helper method
-  Future<void> _scheduleForFuture(int notificationId, List<String> undoneTasks, {required bool isTomorrowOnly}) async {
-    final now = tz.TZDateTime.now(tz.local);
-    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 10, 0);
+  /// Dynamic 4:00 PM scheduling based on user task progress.
+  /// If any of the 3 morning tasks are still undone, sends an urgency reminder.
+  Future<void> scheduleDaily4PMCheck(List<bool> isDoneList) async {
+    try {
+      List<String> undoneTasks = _getUndoneTasks(isDoneList);
+      const int notificationId = 101;
 
-    // If it's already past 10 AM today or we explicitly want tomorrow's schedule
+      if (undoneTasks.isEmpty) {
+        // All tasks done — no 4 PM reminder needed, cancel any existing one
+        await _notificationsPlugin.cancel(notificationId);
+        debugPrint("NotificationService: All tasks complete. Cancelled 4 PM reminder.");
+      } else {
+        await _scheduleForFuture(
+          notificationId: notificationId,
+          undoneTasks: undoneTasks,
+          hour: 16,
+          title: "⏰ 2 Hours More!",
+          buildBody: (names) => "2 hours more. Complete $names and show your strength!",
+          isTomorrowOnly: false,
+        );
+      }
+    } catch (e) {
+      debugPrint("NotificationService: Error scheduling 4 PM check: $e");
+    }
+  }
+
+  /// Returns the list of uncompleted task names from the isDoneList.
+  List<String> _getUndoneTasks(List<bool> isDoneList) {
+    final List<String> undoneTasks = [];
+    if (isDoneList.isEmpty || !isDoneList[0]) undoneTasks.add("Meditation");
+    if (isDoneList.length <= 1 || !isDoneList[1]) undoneTasks.add("Word Memory Game");
+    if (isDoneList.length <= 2 || !isDoneList[2]) undoneTasks.add("Running Exercise");
+    return undoneTasks;
+  }
+
+  /// Schedules a notification at a given [hour] of the day.
+  /// Accepts [buildBody] to generate the body string from task names.
+  Future<void> _scheduleForFuture({
+    required int notificationId,
+    required List<String> undoneTasks,
+    required int hour,
+    required String title,
+    required String Function(String taskNames) buildBody,
+    required bool isTomorrowOnly,
+  }) async {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, 0);
+
+    // If it's already past the target hour today or we explicitly want tomorrow's schedule
     if (isTomorrowOnly || now.isAfter(scheduledDate)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
 
-    String taskNames = undoneTasks.join(", ");
-    String bodyMessage = "You haven't done tasks ($taskNames) yet.But don't worry,you have the energy.Let's get started.You have power to win";
+    final String taskNames = undoneTasks.join(", ");
+    final String bodyMessage = buildBody(taskNames);
 
     // Determine schedule mode based on Android 14+ permission status
     var androidScheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
@@ -134,19 +184,19 @@ class NotificationService {
 
     await _notificationsPlugin.zonedSchedule(
       notificationId,
-      "Daily Task Reminder",
+      title,
       bodyMessage,
       scheduledDate,
       NotificationDetails(
-        android: const AndroidNotificationDetails(
-          'daily_task_reminder_channel_v3', // Increment to v3 to force sound/vibration recreation
+        android: AndroidNotificationDetails(
+          'daily_task_reminder_channel_v3',
           'Daily Task Reminders',
-          channelDescription: 'Reminds you of your uncompleted before 6 PM tasks daily at 10 AM.',
+          channelDescription: 'Reminds you of your uncompleted before 6 PM tasks.',
           importance: Importance.max,
           priority: Priority.high,
           playSound: true,
           enableVibration: true,
-          largeIcon: DrawableResourceAndroidBitmap('ic_launcher'),
+          color: const Color(0xFF000000), // Black background for icon circle
         ),
         iOS: const DarwinNotificationDetails(
           presentAlert: true,
@@ -158,6 +208,6 @@ class NotificationService {
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
-    debugPrint("NotificationService: Scheduled 10 AM reminder for $scheduledDate (mode: $androidScheduleMode) with message: $bodyMessage");
+    debugPrint("NotificationService: Scheduled ${hour}:00 reminder for $scheduledDate (mode: $androidScheduleMode) with message: $bodyMessage");
   }
 }

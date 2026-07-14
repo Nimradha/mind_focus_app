@@ -12,6 +12,8 @@ import 'morning_phone_ban_screen.dart';
 import 'no_scroll_food_screen.dart';
 import 'no_external_food_screen.dart';
 import 'no_scroll_screen.dart';
+import 'food_delay_evaluate_screen.dart';
+import 'urge_pause_screen.dart';
 
 class PlanScreen extends StatefulWidget {
   final bool isVisible;
@@ -310,56 +312,7 @@ _buildNoExternalFoodTask(),
             ];
           case 14: // Day 14
               return [
-                // First reminder without button
-                Container(
-                  margin: const EdgeInsets.only(bottom: 15),
-                  padding: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.orange.withOpacity(0.2),
-                        child: Icon(Icons.notifications, color: Colors.orange, size: 20),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              "Sudden urge pause",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              "Whenever you feel a sudden urge that distracts your feelings, just stop and pause it before you actually do it.",
-                              style: TextStyle(color: Colors.grey, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Checkbox(
-                        value: _challengeChecked['${programDay}_Sudden urge pause'] ?? false,
-                        onChanged: (val) {
-                          if (val == true) {
-                            setState(() => _challengeChecked['${programDay}_Sudden urge pause'] = val!);
-                            _saveChallengeState('${programDay}_Sudden urge pause', val!);
-                            _updateMarks(2);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                _buildSuddenUrgePauseTask(),
                 Divider(
                   height: 1,
                   thickness: 1,
@@ -772,6 +725,7 @@ _buildNoExternalFoodTask(),
     bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
     final bool useFoodDelayScreen = (programDay == 4 || programDay == 5 || programDay == 6 || programDay == 10);
     final bool useMorningPhoneBanScreen = (programDay == 19 || programDay == 23);
+    final bool useFoodDelayEvaluateScreen = (programDay == 12 || programDay == 16 || programDay == 24);
 
     if (useFoodDelayScreen) {
       return GestureDetector(
@@ -810,6 +764,33 @@ _buildNoExternalFoodTask(),
           sub: "Mental Discipline",
           icon: Icons.phone_disabled,
           color: Colors.indigo,
+          action: IgnorePointer(
+            ignoring: !isChecked,
+            child: Checkbox(
+              value: isChecked,
+              onChanged: (val) {
+                if (val == false) {
+                  setState(() {
+                    _challengeChecked['${programDay}_$title'] = false;
+                  });
+                  _saveChallengeState('${programDay}_$title', false);
+                  _updateMarks(-marks);
+                }
+              },
+            ),
+          ),
+        ),
+      );
+    } else if (useFoodDelayEvaluateScreen) {
+      return GestureDetector(
+        onTap: isChecked
+            ? null
+            : () => _startFoodDelayEvaluateChallenge(title, marks),
+        child: _taskContainer(
+          title: title,
+          sub: "Mental Discipline",
+          icon: Icons.timer,
+          color: Colors.orange,
           action: IgnorePointer(
             ignoring: !isChecked,
             child: Checkbox(
@@ -981,6 +962,54 @@ _buildNoExternalFoodTask(),
       context,
       MaterialPageRoute(
         builder: (context) => const NoExternalFoodScreen(),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
+    }
+  }
+
+  Widget _buildSuddenUrgePauseTask() {
+    const String title = "Sudden urge pause";
+    const int marks = 2;
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
+
+    return GestureDetector(
+      onTap: isChecked ? null : () => _startUrgePauseChallenge(title, marks),
+      child: _taskContainer(
+        title: title,
+        sub: "Whenever you feel a sudden urge that distracts your feelings, just stop and pause it before you actually do it.",
+        icon: Icons.notifications,
+        color: Colors.orange,
+        action: IgnorePointer(
+          ignoring: !isChecked,
+          child: Checkbox(
+            value: isChecked,
+            onChanged: (val) {
+              if (val == false) {
+                setState(() {
+                  _challengeChecked['${programDay}_$title'] = false;
+                });
+                _saveChallengeState('${programDay}_$title', false);
+                _updateMarks(-marks);
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _startUrgePauseChallenge(String title, int marks) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UrgePauseScreen(title: title),
       ),
     );
 
@@ -1224,24 +1253,51 @@ _buildNoExternalFoodTask(),
   Widget _buildReminderTask(String title, String sub, {bool showBracket = false}) {
     int marks = showBracket ? 3 : 2;
     bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
+    final bool useUrgePauseScreen = (programDay == 19 || programDay == 26);
+
+    Widget taskWidget = _taskContainer(
+      title: title,
+      sub: sub,
+      icon: Icons.notifications,
+      color: Colors.orange,
+      action: useUrgePauseScreen
+          ? IgnorePointer(
+              ignoring: !isChecked,
+              child: Checkbox(
+                value: isChecked,
+                onChanged: (val) {
+                  if (val == false) {
+                    setState(() {
+                      _challengeChecked['${programDay}_$title'] = false;
+                    });
+                    _saveChallengeState('${programDay}_$title', false);
+                    _updateMarks(-marks);
+                  }
+                },
+              ),
+            )
+          : Checkbox(
+              value: isChecked,
+              onChanged: (val) {
+                if (val == true) {
+                  setState(() => _challengeChecked['${programDay}_$title'] = val!);
+                  _saveChallengeState('${programDay}_$title', val!);
+                  _updateMarks(marks);
+                }
+              },
+            ),
+    );
+
+    if (useUrgePauseScreen) {
+      taskWidget = GestureDetector(
+        onTap: isChecked ? null : () => _startUrgePauseChallenge(title, marks),
+        child: taskWidget,
+      );
+    }
+
     return Column(
       children: [
-        _taskContainer(
-          title: title,
-          sub: sub,
-          icon: Icons.notifications,
-          color: Colors.orange,
-          action: Checkbox(
-            value: isChecked,
-            onChanged: (val) {
-              if (val == true) {
-                setState(() => _challengeChecked['${programDay}_$title'] = val!);
-                _saveChallengeState('${programDay}_$title', val!);
-                _updateMarks(marks);
-              }
-            },
-          ),
-        ),
+        taskWidget,
         if (showBracket) ...[
           const SizedBox(height: 8),
           RichText(
@@ -1436,6 +1492,23 @@ void _updateMarks(int points) async {
       context,
       MaterialPageRoute(
         builder: (context) => FoodDelayScreen(durationMinutes: durationMinutes),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
+    }
+  }
+
+  void _startFoodDelayEvaluateChallenge(String title, int marks) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FoodDelayEvaluateScreen(title: title),
       ),
     );
 

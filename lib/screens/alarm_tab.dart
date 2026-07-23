@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:alarm/alarm.dart';
 import 'package:intl/intl.dart';
+import '../services/permission_service.dart';
 
 class AlarmTab extends StatefulWidget {
   const AlarmTab({super.key});
@@ -31,7 +32,22 @@ class _AlarmTabState extends State<AlarmTab> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _syncAlarmsWithSystem();
+  }
+
+  void _syncAlarmsWithSystem() {
+    final activeAlarms = Alarm.getAlarms();
+    final activeIds = activeAlarms.map((a) => a.id).toSet();
+    for (var alarm in alarms) {
+      alarm['isActive'] = activeIds.contains(alarm['id']);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    _syncAlarmsWithSystem();
     // Logic to update the header text based on active switches
     bool anyActive = alarms.any((alarm) => alarm['isActive'] == true);
     String headerText = anyActive ? "Alarms are active" : "All alarms are off";
@@ -127,9 +143,10 @@ class _AlarmTabState extends State<AlarmTab> {
             onChanged: (bool value) async{
               setState(() {
                 alarms[index]['isActive'] = value;
-                // In a real app, you would call Alarm.set or Alarm.stop here
               });
               if (value) {
+                await PermissionService.checkAndRequestOverlayPermission(context);
+                if (!mounted) return;
                 // 2. Logic to turn the string "05:30" into a real time
                 final now = DateTime.now();
                 final timeParts = alarm['time'].split(':');
@@ -161,10 +178,12 @@ class _AlarmTabState extends State<AlarmTab> {
                   dateTime: alarmTime,
                   assetAudioPath: 'assets/audio/SlowMorning.mp3',
                   loopAudio: true,
-                  vibrate: false,
+                  vibrate: true,
                   volume: 0.8,
                   notificationTitle: 'MindGym Alert',
                   notificationBody: 'Time for your focus session!',
+                  enableNotificationOnKill: true,
+                  androidFullScreenIntent: true,
                 );
 
                 // 4. Actually schedule the alarm in the system
@@ -188,7 +207,10 @@ class _AlarmTabState extends State<AlarmTab> {
       initialTime = TimeOfDay(hour: int.parse(timeParts[0]), minute: int.parse(timeParts[1]));
     }
 
-    final res = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+    await PermissionService.checkAndRequestOverlayPermission(context);
+    if (!context.mounted) return;
+
+    final res = await showTimePicker(context: context, initialTime: initialTime);
     if (res != null) {
       final now = DateTime.now();
       DateTime alarmTime = DateTime(now.year, now.month, now.day, res.hour, res.minute);
@@ -209,6 +231,8 @@ class _AlarmTabState extends State<AlarmTab> {
         loopAudio: true,
         vibrate: true,
         volume: 0.8,
+        enableNotificationOnKill: true,
+        androidFullScreenIntent: true,
       );
 
       await Alarm.set(alarmSettings: settings);

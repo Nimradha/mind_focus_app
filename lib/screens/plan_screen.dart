@@ -14,6 +14,8 @@ import 'no_external_food_screen.dart';
 import 'no_scroll_screen.dart';
 import 'food_delay_evaluate_screen.dart';
 import 'urge_pause_screen.dart';
+import 'build_savings_screen.dart';
+import 'mind_drift_screen.dart';
 
 class PlanScreen extends StatefulWidget {
   final bool isVisible;
@@ -218,45 +220,7 @@ class _PlanScreenState extends State<PlanScreen> {
                    ),
                  ),
                ),
-               Container(
-                  margin: const EdgeInsets.only(bottom: 15),
-                  padding: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.orange.withOpacity(0.2),
-                        child: Icon(Icons.notifications, color: Colors.orange, size: 20),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Mind‑drift reminder",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const Text(
-                              "Whenever you notice thoughts wandering, gently bring attention back to the present moment.",
-                              style: TextStyle(color: Colors.grey, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+               _buildMindDriftTask(),
             ];
           case 9: // Day 9 
             return [_buildArticleTask("30 min social media delay", "Read the given article to improve focus")];
@@ -1151,52 +1115,53 @@ _buildNoExternalFoodTask(),
 
   Widget _buildSavingsTask(String title, String sub) {
     bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
-    return Column(
-      children: [
-        _taskContainer(
-          title: title,
-          sub: sub,
-          icon: Icons.savings,
-          color: Colors.purple,
-          action: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Checkbox(
-                value: isChecked,
-                onChanged: (val) {
-                  if (val == true) {
-                    setState(() => _challengeChecked['${programDay}_$title'] = val!);
-                    _saveChallengeState('${programDay}_$title', val!);
-                    _updateMarks(2);
-                  }
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.add_circle),
-                onPressed: () {
-                  setState(() => _showAmountInput = true);
-                },
-              ),
-            ],
-          ),
-        ),
-        if (_showAmountInput)
-          Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: TextField(
-              controller: _amountController,
-              decoration: InputDecoration(
-                hintText: "Enter amount saved today",
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.save),
-                  onPressed: () => _saveToDatabase(_amountController.text),
+    return GestureDetector(
+      onTap: isChecked ? null : () => _startSavingsChallenge(title),
+      child: _taskContainer(
+        title: title,
+        sub: sub,
+        icon: Icons.savings,
+        color: Colors.purple,
+        action: isChecked
+            ? _buildBadge("DONE", Colors.green.shade100, Colors.green)
+            : ElevatedButton(
+                onPressed: () => _startSavingsChallenge(title),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black
+                      : Colors.white,
+                  elevation: 0,
+                  shape: const StadiumBorder(),
+                  side: BorderSide(color: Colors.green.shade100),
+                ),
+                child: Text(
+                  "Start",
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.green.shade800
+                        : Colors.green,
+                  ),
                 ),
               ),
-              keyboardType: TextInputType.number,
-            ),
-          ),
-      ],
+      ),
     );
+  }
+
+  void _startSavingsChallenge(String title) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BuildSavingsScreen(),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(2);
+    }
   }
 
     // Meditation task widget
@@ -1249,7 +1214,62 @@ _buildNoExternalFoodTask(),
     }
   }
 
-  // Reminder task widget with optional bracketed red text
+  // Mind-drift reminder task widget
+  Widget _buildMindDriftTask() {
+    const String title = 'Mind\u2011drift reminder';
+    const int marks = 2;
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
+
+    return GestureDetector(
+      onTap: isChecked ? null : () => _startMindDriftChallenge(title, marks),
+      child: _taskContainer(
+        title: title,
+        sub: 'Whenever you notice thoughts wandering, gently bring attention back to the present moment.',
+        icon: Icons.notifications,
+        color: Colors.orange,
+        action: isChecked
+            ? _buildBadge('DONE', Colors.green.shade100, Colors.green)
+            : ElevatedButton(
+                onPressed: () => _startMindDriftChallenge(title, marks),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black
+                      : Colors.white,
+                  elevation: 0,
+                  shape: const StadiumBorder(),
+                  side: BorderSide(color: Colors.green.shade100),
+                ),
+                child: Text(
+                  'Start',
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.green.shade800
+                        : Colors.green,
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
+  void _startMindDriftChallenge(String title, int marks) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MindDriftScreen(),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
+    }
+  }
+
+
   Widget _buildReminderTask(String title, String sub, {bool showBracket = false}) {
     int marks = showBracket ? 3 : 2;
     bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;

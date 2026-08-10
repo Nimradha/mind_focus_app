@@ -16,6 +16,9 @@ import 'food_delay_evaluate_screen.dart';
 import 'urge_pause_screen.dart';
 import 'build_savings_screen.dart';
 import 'mind_drift_screen.dart';
+import 'master_weakness_screen.dart';
+import 'ultimate_test_screen.dart';
+import 'track_mental_energy_screen.dart';
 
 class PlanScreen extends StatefulWidget {
   final bool isVisible;
@@ -404,7 +407,7 @@ _buildNoExternalFoodTask(),
               ];
             case 20: // Day 20
               return [
-                _buildReminderTask("3‑minute pause","Whenever you feel something that distracts your feelings - name it, pause 3 min before acting."),
+                _buildMasterWeaknessTask(),
                 const SizedBox(height: 15),
                 _buildNoComplaintTask(),
               ];
@@ -466,7 +469,7 @@ _buildNoExternalFoodTask(),
               ];
             case 27: // Day 27
               return [
-                _buildReminderTask("Identify your hardest distraction", "Pick the one distraction that is hardest for you to resist today, and make a rule that you must wait before giving in to it."),
+                _buildUltimateTestTask(),
                 Divider(
                   height: 1,
                   thickness: 1,
@@ -518,13 +521,7 @@ _buildNoExternalFoodTask(),
               ];
             case 29: // Day 29
               return [
-                _taskContainer(
-                  title: "Attention audit",
-                  sub: "Once an hour, write down your exact thought. At the end of the day, check if your mind spent its time on things you chose, or if it just reacted to whatever popped up in front of you.",
-                  icon: Icons.notifications,
-                  color: Colors.orange,
-                  action: const SizedBox.shrink(),
-                ),
+                _buildTrackMentalEnergyTask(),
               ];
             case 30: // Day 30
               return [
@@ -1257,6 +1254,172 @@ _buildNoExternalFoodTask(),
       context,
       MaterialPageRoute(
         builder: (context) => const MindDriftScreen(),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
+    }
+  }
+
+
+  // Master Your Weakness task widget (Day 20)
+  Widget _buildMasterWeaknessTask() {
+    const String title = '3‑minute pause';
+    const int marks = 2;
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
+
+    return GestureDetector(
+      onTap: isChecked ? null : () => _startMasterWeaknessChallenge(title, marks),
+      child: _taskContainer(
+        title: 'Master Your Weakness',
+        sub: 'Identify your hardest impulse, set your own delay, and govern your own mind.',
+        icon: Icons.psychology,
+        color: Colors.deepOrange,
+        action: isChecked
+            ? _buildBadge('DONE', Colors.green.shade100, Colors.green)
+            : ElevatedButton(
+                onPressed: () => _startMasterWeaknessChallenge(title, marks),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black
+                      : Colors.white,
+                  elevation: 0,
+                  shape: const StadiumBorder(),
+                  side: BorderSide(color: Colors.green.shade100),
+                ),
+                child: Text(
+                  'Start',
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.green.shade800
+                        : Colors.green,
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
+  void _startMasterWeaknessChallenge(String title, int marks) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MasterWeaknessScreen(),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
+    }
+  }
+
+  // Ultimate Test of Will task widget (Day 27)
+  Widget _buildUltimateTestTask() {
+    const String title = 'Identify your hardest distraction';
+    const int marks = 2;
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
+
+    return GestureDetector(
+      onTap: isChecked ? null : () => _startUltimateTestChallenge(title, marks),
+      child: _taskContainer(
+        title: 'The Ultimate Test of Will',
+        sub: 'Pick the one distraction that is hardest for you to resist today, and make a rule that you must wait before giving in to it.',
+        icon: Icons.security,
+        color: Colors.deepOrange,
+        action: isChecked
+            ? _buildBadge('DONE', Colors.green.shade100, Colors.green)
+            : ElevatedButton(
+                onPressed: () => _startUltimateTestChallenge(title, marks),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black
+                      : Colors.white,
+                  elevation: 0,
+                  shape: const StadiumBorder(),
+                  side: BorderSide(color: Colors.green.shade100),
+                ),
+                child: Text(
+                  'Start',
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.green.shade800
+                        : Colors.green,
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
+  void _startUltimateTestChallenge(String title, int marks) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const UltimateTestScreen(),
+      ),
+    );
+
+    if (completed == true) {
+      setState(() {
+        _challengeChecked['${programDay}_$title'] = true;
+      });
+      _saveChallengeState('${programDay}_$title', true);
+      _updateMarks(marks);
+    }
+  }
+
+  // Track Your Mental Energy task widget (Day 29)
+  Widget _buildTrackMentalEnergyTask() {
+    const String title = 'Attention audit';
+    const int marks = 2;
+    bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
+
+    return GestureDetector(
+      onTap: isChecked ? null : () => _startTrackMentalEnergyChallenge(title, marks),
+      child: _taskContainer(
+        title: 'Track Your Mental Energy',
+        sub: 'Once an hour, write down your exact thought and audit your focus.',
+        icon: Icons.notifications,
+        color: Colors.orange,
+        action: isChecked
+            ? _buildBadge('DONE', Colors.green.shade100, Colors.green)
+            : ElevatedButton(
+                onPressed: () => _startTrackMentalEnergyChallenge(title, marks),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black
+                      : Colors.white,
+                  elevation: 0,
+                  shape: const StadiumBorder(),
+                  side: BorderSide(color: Colors.green.shade100),
+                ),
+                child: Text(
+                  'Start',
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.green.shade800
+                        : Colors.green,
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
+  void _startTrackMentalEnergyChallenge(String title, int marks) async {
+    final completed = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const TrackMentalEnergyScreen(),
       ),
     );
 

@@ -16,7 +16,6 @@ class AlarmRingScreen extends StatefulWidget {
 }
 
 class _AlarmRingScreenState extends State<AlarmRingScreen> {
-  int _snoozeMinutes = 5;
   late DateTime _currentTime;
   Timer? _timer;
 
@@ -42,27 +41,6 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
   Future<void> _dismissAlarm() async {
     await Alarm.stop(widget.alarmSettings.id);
     if (mounted) {
-      Navigator.of(context).pop();
-    }
-  }
-
-  Future<void> _snoozeAlarm() async {
-    await Alarm.stop(widget.alarmSettings.id);
-
-    final snoozeTime = DateTime.now().add(Duration(minutes: _snoozeMinutes));
-    final newSettings = widget.alarmSettings.copyWith(
-      dateTime: snoozeTime,
-    );
-
-    await Alarm.set(alarmSettings: newSettings);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Alarm snoozed for $_snoozeMinutes minutes'),
-          duration: const Duration(seconds: 3),
-        ),
-      );
       Navigator.of(context).pop();
     }
   }
@@ -157,66 +135,8 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
                 ),
               ),
 
-              // Bottom Snooze Controls
-              Padding(
-                padding: const EdgeInsets.only(bottom: 50.0, left: 30, right: 30),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Minus Button
-                    IconButton(
-                      icon: const Icon(Icons.remove, color: Colors.white70, size: 28),
-                      onPressed: () {
-                        if (_snoozeMinutes > 1) {
-                          setState(() {
-                            _snoozeMinutes--;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 15),
-
-                    // Snooze Button Pill
-                    InkWell(
-                      onTap: _snoozeAlarm,
-                      borderRadius: BorderRadius.circular(30),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 28, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          'Snooze $_snoozeMinutes mins',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 15),
-                    // Plus Button
-                    IconButton(
-                      icon: const Icon(Icons.add, color: Colors.white70, size: 28),
-                      onPressed: () {
-                        if (_snoozeMinutes < 60) {
-                          setState(() {
-                            _snoozeMinutes++;
-                          });
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
+              // Bottom Spacing (Snooze removed)
+              const SizedBox(height: 80),
             ],
           ),
         ),
@@ -224,3 +144,4 @@ class _AlarmRingScreenState extends State<AlarmRingScreen> {
     );
   }
 }
+

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.view.WindowManager;
 import androidx.annotation.NonNull;
@@ -20,6 +21,22 @@ public class MainActivity extends FlutterActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setupLockscreenFlags();
+    }
+
+    @Override
+    protected void onNewIntent(@NonNull Intent intent) {
+        super.onNewIntent(intent);
+        setupLockscreenFlags();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setupLockscreenFlags();
+    }
+
+    private void setupLockscreenFlags() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
             setTurnScreenOn(true);
@@ -73,9 +90,22 @@ public class MainActivity extends FlutterActivity {
                         startActivity(intent);
                     }
                     result.success(true);
+                } else if (call.method.equals("requestBatteryOptimizationPermission")) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        try {
+                            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                            intent.setData(Uri.parse("package:" + getPackageName()));
+                            startActivity(intent);
+                        } catch (Exception e) {
+                            Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                            startActivity(intent);
+                        }
+                    }
+                    result.success(true);
                 } else {
                     result.notImplemented();
                 }
             });
     }
 }
+

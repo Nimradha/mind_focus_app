@@ -52,6 +52,16 @@ class PermissionService {
     }
   }
 
+  /// Opens Android System Settings for Battery Optimization
+  static Future<void> requestBatteryOptimizationPermission() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _channel.invokeMethod('requestBatteryOptimizationPermission');
+    } catch (e) {
+      debugPrint('Error requesting battery optimization permission: $e');
+    }
+  }
+
   /// Convenience helper to check overlay permission and prompt the user if missing
   static Future<bool> checkAndRequestOverlayPermission(
       BuildContext context) async {
@@ -95,3 +105,4 @@ class PermissionService {
     return true;
   }
 }
+

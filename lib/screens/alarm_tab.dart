@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:alarm/alarm.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/permission_service.dart';
 
 class AlarmTab extends StatefulWidget {
@@ -11,8 +13,8 @@ class AlarmTab extends StatefulWidget {
 }
 
 class _AlarmTabState extends State<AlarmTab> {
-  // Your list of alarms (In a real app, you'd load these from a database)
-  final List<Map<String, dynamic>> alarms = [
+  // Your list of alarms (Loaded from SharedPreferences, fallback to defaults)
+  List<Map<String, dynamic>> alarms = [
     {'id': 1, 'time': '00:00', 'label': 'Tue, 24 Mar', 'isActive': false},
     {'id': 2, 'time': '05:30', 'label': 'Tue, 24 Mar', 'isActive': false},
     {'id': 3, 'time': '06:00', 'label': 'M T W T F S S', 'isActive': false},
@@ -34,14 +36,43 @@ class _AlarmTabState extends State<AlarmTab> {
   @override
   void initState() {
     super.initState();
+    _loadSavedAlarms();
+  }
+
+  Future<void> _loadSavedAlarms() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedJson = prefs.getString('user_alarms');
+    if (savedJson != null) {
+      try {
+        final List<dynamic> decoded = jsonDecode(savedJson);
+        setState(() {
+          alarms = decoded.map((item) => Map<String, dynamic>.from(item)).toList();
+        });
+      } catch (e) {
+        debugPrint("Error loading alarms: $e");
+      }
+    }
     _syncAlarmsWithSystem();
+  }
+
+  Future<void> _saveAlarms() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_alarms', jsonEncode(alarms));
   }
 
   void _syncAlarmsWithSystem() {
     final activeAlarms = Alarm.getAlarms();
     final activeIds = activeAlarms.map((a) => a.id).toSet();
+    bool changed = false;
     for (var alarm in alarms) {
-      alarm['isActive'] = activeIds.contains(alarm['id']);
+      bool isCurrentlyActive = activeIds.contains(alarm['id']);
+      if (alarm['isActive'] != isCurrentlyActive) {
+        alarm['isActive'] = isCurrentlyActive;
+        changed = true;
+      }
+    }
+    if (changed) {
+      _saveAlarms();
     }
   }
 
@@ -144,6 +175,7 @@ class _AlarmTabState extends State<AlarmTab> {
               setState(() {
                 alarms[index]['isActive'] = value;
               });
+              _saveAlarms();
               if (value) {
                 await PermissionService.checkAndRequestOverlayPermission(context);
                 if (!mounted) return;
@@ -253,6 +285,7 @@ class _AlarmTabState extends State<AlarmTab> {
           });
         }
       });
+      _saveAlarms();
 
       // 2. Show the specific message
       ScaffoldMessenger.of(context).clearSnackBars(); // Optional: clears any existing bars first
@@ -265,4 +298,4 @@ class _AlarmTabState extends State<AlarmTab> {
       );
     }
   }
-}
+}

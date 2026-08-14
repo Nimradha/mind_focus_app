@@ -49,6 +49,31 @@ class NotificationService {
         debugPrint("Notification clicked: ${response.payload}");
       },
     );
+
+    // 4. Ensure default daily notifications are scheduled in the OS
+    await ensureDefaultDailyRemindersScheduled();
+  }
+
+  /// Ensures recurring daily reminders (10 AM & 4 PM) are registered with the OS,
+  /// so notifications fire even if the app is never opened.
+  Future<void> ensureDefaultDailyRemindersScheduled() async {
+    try {
+      final List<PendingNotificationRequest> pendingRequests =
+          await _notificationsPlugin.pendingNotificationRequests();
+      final pendingIds = pendingRequests.map((r) => r.id).toSet();
+
+      if (!pendingIds.contains(100)) {
+        await scheduleDaily10AMCheck([false, false, false]);
+      }
+      if (!pendingIds.contains(101)) {
+        await scheduleDaily4PMCheck([false, false, false]);
+      }
+      if (!pendingIds.contains(102)) {
+        await scheduleDaily6PMCheck([false, false, false]);
+      }
+    } catch (e) {
+      debugPrint("NotificationService: Error ensuring default reminders: $e");
+    }
   }
 
   /// Requests notification permissions from the user.
@@ -86,7 +111,7 @@ class NotificationService {
 
       if (undoneTasks.isEmpty) {
         await _notificationsPlugin.cancel(notificationId);
-        debugPrint("NotificationService: All tasks complete. Cancelled 10 AM reminder.");
+        debugPrint("NotificationService: All tasks complete. Cancelled 10 AM reminder for today.");
         // Schedule tomorrow's fresh 10 AM reminder
         await _scheduleForFuture(
           notificationId: notificationId,
@@ -136,6 +161,41 @@ class NotificationService {
       debugPrint("NotificationService: Error scheduling 4 PM check: $e");
     }
   }
+
+  /// Dynamic 6:00 PM summary & motivation scheduling.
+  /// If all morning tasks are completed: Sends a congratulatory message.
+  /// If any tasks are incomplete: Sends a motivational message encouraging completion tomorrow.
+  Future<void> scheduleDaily6PMCheck(List<bool> isDoneList) async {
+    try {
+      List<String> undoneTasks = _getUndoneTasks(isDoneList);
+      const int notificationId = 102;
+
+      if (undoneTasks.isEmpty) {
+        // All morning tasks complete
+        await _scheduleForFuture(
+          notificationId: notificationId,
+          undoneTasks: [],
+          hour: 18,
+          title: "🏆 Great Job Today!",
+          buildBody: (_) => "Congratulations! You successfully completed all your morning tasks today. Keep your energy up!",
+          isTomorrowOnly: false,
+        );
+      } else {
+        // Incomplete morning tasks
+        await _scheduleForFuture(
+          notificationId: notificationId,
+          undoneTasks: undoneTasks,
+          hour: 18,
+          title: "💪 Tomorrow is a New Day!",
+          buildBody: (names) => "You didn't complete $names today, but don't give up! Reset your focus and conquer tomorrow's morning tasks!",
+          isTomorrowOnly: false,
+        );
+      }
+    } catch (e) {
+      debugPrint("NotificationService: Error scheduling 6 PM check: $e");
+    }
+  }
+
 
   /// Returns the list of uncompleted task names from the isDoneList.
   List<String> _getUndoneTasks(List<bool> isDoneList) {
@@ -206,8 +266,10 @@ class NotificationService {
       ),
       androidScheduleMode: androidScheduleMode,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
     );
 
-    debugPrint("NotificationService: Scheduled ${hour}:00 reminder for $scheduledDate (mode: $androidScheduleMode) with message: $bodyMessage");
+    debugPrint("NotificationService: Scheduled recurring ${hour}:00 reminder starting $scheduledDate (mode: $androidScheduleMode) with message: $bodyMessage");
   }
 }
+

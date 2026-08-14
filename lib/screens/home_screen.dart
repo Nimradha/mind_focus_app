@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'details.dart';
 import '../services/notification_service.dart';
 import 'task_intro_screen.dart';
@@ -61,6 +62,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _eveningCongratsShown = false;
   bool _allCongratsShown = false;
 
+  // Savings tracker
+  double _totalSaved = 0.0;
+  int _programDay = 1;
+  StreamSubscription<DocumentSnapshot>? _savingsSubscription;
+
   // Word-by-word heading animation
   int _visibleWordCount = 0;
   Timer? _wordTimer;
@@ -71,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _playHomePageSound();
     _loadUserProgress();
     _startHeadingAnimation();
+    _listenToSavings();
   }
 
   /// Animates the heading text word-by-word with a 300ms stagger
@@ -102,6 +109,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  /// Listens to Firestore in real-time for changes to totalSaved so the banner refreshes immediately.
+  void _listenToSavings() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    _savingsSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.exists && snapshot.data() != null) {
+        final data = snapshot.data()!;
+        if (mounted) {
+          setState(() {
+            _totalSaved = (data['totalSaved'] ?? 0).toDouble();
+          });
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _savingsSubscription?.cancel();
+    super.dispose();
+  }
+
   void _loadUserProgress() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -116,8 +149,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           // The date the user last clicked ANY checkbox
           String? lastActiveDate = data['lastActiveDate'];
 
+          // Calculate program day
+          DateTime? creationTimeFull = user.metadata.creationTime;
+          int computedProgramDay = 1;
+          if (creationTimeFull != null) {
+            DateTime now2 = DateTime.now();
+            DateTime creationDate2 = DateTime(creationTimeFull.year, creationTimeFull.month, creationTimeFull.day);
+            DateTime todayDate2 = DateTime(now2.year, now2.month, now2.day);
+            computedProgramDay = todayDate2.difference(creationDate2).inDays + 1;
+          }
+
           setState(() {
             _completedDaysCount = data['completedDaysCount'] ?? 0;
+            _totalSaved = (data['totalSaved'] ?? 0).toDouble();
+            _programDay = computedProgramDay;
             
             List<bool> savedList = List<bool>.from(data['lastDoneList'] ?? [false, false, false, false]);
             int doneCount = savedList.where((item) => item).length;
@@ -175,6 +220,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           setState(() => _isLoading = false);
         }
         _scheduleDailyReminder();
+        _checkAndShowEveningPreview(user);
       } catch (e) {
         debugPrint("Error loading: $e");
         setState(() => _isLoading = false);
@@ -185,6 +231,227 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void _scheduleDailyReminder() {
     NotificationService().scheduleDaily10AMCheck(_isDoneList);
     NotificationService().scheduleDaily4PMCheck(_isDoneList);
+    NotificationService().scheduleDaily6PMCheck(_isDoneList);
+  }
+
+  /// Checks if current time is past 6 PM and shows a preview popup of tomorrow's challenges once per day.
+  Future<void> _checkAndShowEveningPreview(User user) async {
+    final now = DateTime.now();
+    if (now.hour < 18) return; // Only trigger after 6:00 PM
+
+    final todayStr = now.toString().split(' ')[0];
+    final prefs = await SharedPreferences.getInstance();
+    final lastShown = prefs.getString('evening_preview_shown_date');
+
+    if (lastShown == todayStr) return; // Already shown today
+
+    // Calculate current program day based on account creation time
+    DateTime? creationTime = user.metadata.creationTime;
+    int programDay = 1;
+    if (creationTime != null) {
+      DateTime creationDate = DateTime(creationTime.year, creationTime.month, creationTime.day);
+      DateTime todayDate = DateTime(now.year, now.month, now.day);
+      programDay = todayDate.difference(creationDate).inDays + 1;
+    }
+    int tomorrowDay = programDay + 1;
+    List<String> tomorrowChallenges = _getChallengesForDay(tomorrowDay);
+
+    await prefs.setString('evening_preview_shown_date', todayStr);
+
+    if (mounted) {
+      _showTomorrowPreviewDialog(tomorrowDay, tomorrowChallenges);
+    }
+  }
+
+  /// Renders a dialog showing tomorrow's upcoming challenges.
+  void _showTomorrowPreviewDialog(int tomorrowDay, List<String> challenges) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        bool isDark = Theme.of(context).brightness == Brightness.dark;
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          backgroundColor: isDark ? const Color(0xFF1E1E2C) : Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.wb_twilight, color: Colors.amber, size: 28),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Tomorrow's Preview",
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.amber.shade700,
+                            ),
+                          ),
+                          Text(
+                            "Day $tomorrowDay Challenges",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Here is a sneak peek at the challenges scheduled for you tomorrow in your Plan screen. Prepare your mind!",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white70 : Colors.grey.shade700,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.black26 : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.withOpacity(0.15)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: challenges.map((challenge) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.bolt, color: Colors.orange, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                challenge,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark ? Colors.white : Colors.black90,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: const Text(
+                      "I'm Ready!",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Maps a program day index to its corresponding scheduled challenges.
+  List<String> _getChallengesForDay(int day) {
+    switch (day) {
+      case 1:
+      case 2:
+        return ["No challenges for the first 2 days. Get ready!"];
+      case 3:
+        return ["15 min social media delay"];
+      case 4:
+        return ["Delay 5 minutes from taking favorite food item", "No-scroll during meals"];
+      case 5:
+        return ["Delay 5 minutes from taking favorite food item", "10 min social media delay"];
+      case 6:
+        return ["Delay 10 minutes from taking favorite food item", "No complaint day"];
+      case 7:
+        return ["Never buy the food that you feel to buy (Build Savings)"];
+      case 8:
+        return ["10 min meditation – focus on breathing", "Mind‑drift reminder"];
+      case 9:
+        return ["30 min social media delay"];
+      case 10:
+        return ["Delay 10 minutes from taking favorite food item", "No social media scrolling at all"];
+      case 11:
+        return ["10 min meditation – focus on breathing"];
+      case 12:
+        return ["20 min food delay – Evaluate cost and health value", "No external food day"];
+      case 13:
+        return ["15 min social media delay", "No complaint day"];
+      case 14:
+        return ["Sudden urge pause", "3‑minute pause"];
+      case 15:
+        return ["10 min meditation", "No social media scrolling at all"];
+      case 16:
+        return ["30 min food delay – Evaluate cost and health value"];
+      case 17:
+        return ["30 min social media delay", "No external food day"];
+      case 18:
+        return ["10 min meditation"];
+      case 19:
+        return ["Morning phone ban - no phone for 1st 30 min", "Call out cravings"];
+      case 20:
+        return ["Master Your Weakness", "No complaint day"];
+      case 21:
+        return ["30 min social media delay"];
+      case 22:
+        return ["15 min meditation", "No social media scrolling at all"];
+      case 23:
+        return ["Morning phone ban - no phone for 1 hour after waking"];
+      case 24:
+        return ["30 min food delay – Evaluate identity", "No external food day"];
+      case 25:
+        return ["15 min meditation"];
+      case 26:
+        return ["Call out cravings"];
+      case 27:
+        return ["The Ultimate Test of Will", "Decide your wait time"];
+      case 28:
+        return ["15 min meditation", "Be your own coach"];
+      case 29:
+        return ["Track Your Mental Energy"];
+      case 30:
+        return ["Month reflection", "Full dopamine audit"];
+      default:
+        return ["Rest Day - Keep your mindset sharp!"];
+    }
   }
 
   void _updateFirebaseList() async {
@@ -515,7 +782,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
-              const SizedBox(height: 25),
+              const SizedBox(height: 20),
+              if (_programDay >= 7) _buildSavingsBanner(),
+              if (_programDay >= 7) const SizedBox(height: 20),
               _buildWelcomeCard(),
               const SizedBox(height: 25),
               // Pass the progress data to the card
@@ -570,6 +839,97 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
       ],
+    );
+  }
+
+  // --- 1b. Savings Banner (Day 7+) ---
+  Widget _buildSavingsBanner() {
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Format the amount nicely
+    String formattedAmount = _totalSaved == _totalSaved.truncateToDouble()
+        ? _totalSaved.toStringAsFixed(0)
+        : _totalSaved.toStringAsFixed(2);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF1B4332), const Color(0xFF2D6A4F)]
+              : [const Color(0xFF40916C), const Color(0xFF52B788)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF40916C).withOpacity(0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Coin icon container
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.savings_rounded, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "TOTAL SAVINGS SO FAR",
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white70,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  "Rs. $formattedAmount",
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Day badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  "DAY",
+                  style: TextStyle(fontSize: 9, color: Colors.white70, fontWeight: FontWeight.w600, letterSpacing: 1),
+                ),
+                Text(
+                  "$_programDay",
+                  style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

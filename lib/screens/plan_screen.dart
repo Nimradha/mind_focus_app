@@ -196,7 +196,7 @@ class _PlanScreenState extends State<PlanScreen> {
           return [
             _buildSimpleDelayTask("Delay 5 minutes from taking your favorite food item", 2),
             const SizedBox(height: 15),
-            _buildArticleTask("10 min social media delay", "Read the given article to improve focus"),
+            _buildArticleTask("15 min social media delay", "Read the given article to improve focus"),
           ];
         case 6: // Day 6
           return [

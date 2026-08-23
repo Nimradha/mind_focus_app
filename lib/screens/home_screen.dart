@@ -129,11 +129,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     });
   }
 
-  @override
-  void dispose() {
-    _savingsSubscription?.cancel();
-    super.dispose();
-  }
 
   void _loadUserProgress() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -349,7 +344,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: isDark ? Colors.white : Colors.black90,
+                                  color: isDark ? Colors.white : Colors.black87,
                                 ),
                               ),
                             ),
@@ -724,6 +719,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _wordTimer?.cancel();
+    _savingsSubscription?.cancel();
     _audioPlayer.dispose();
     _homePageSoundPlayer.dispose();
     super.dispose();

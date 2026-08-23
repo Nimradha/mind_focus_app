@@ -74,11 +74,10 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: true,  // Always allow back navigation
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        if (_isCompleted) {
-          Navigator.pop(context, true);
+        if (didPop) {
+          _timer?.cancel(); // Stop timer cleanly when user goes back
         }
       },
       child: Scaffold(
@@ -86,12 +85,13 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0.5,
-          leading: _isCompleted
-              ? IconButton(
+          leading: IconButton(
                   icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
-                  onPressed: () => Navigator.pop(context),
-                )
-              : null,
+                  onPressed: () {
+                    _timer?.cancel(); // Stop timer cleanly
+                    Navigator.pop(context, _isCompleted ? true : null); // Only return true if fully done
+                  },
+                ),
           title: Text(
             widget.title,
             style: const TextStyle(

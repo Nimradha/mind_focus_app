@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:google_fonts/google_fonts.dart';
 import 'home_screen.dart';
 import 'meditation_timer_screen.dart';
 import 'word_game_screen.dart';
@@ -92,7 +93,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Task Details"),
+        title: Text("Task Details", style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold, fontSize: 24)),
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
@@ -105,7 +106,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 10),
               child: Text(
                   widget.exercise.title,
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)
+                  style: GoogleFonts.ebGaramond(fontSize: 28, fontWeight: FontWeight.bold)
               ),
             ),
 

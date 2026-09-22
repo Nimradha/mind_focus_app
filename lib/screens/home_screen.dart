@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'details.dart';
 import '../services/notification_service.dart';
 import 'task_intro_screen.dart';
@@ -829,7 +831,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(formattedDate, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            Text(formattedDate, style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold)),
             Text("$greeting, $shortDisplayName!",
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           ],
@@ -941,7 +943,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Welcome to MindGym!", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(
+            "Welcome to NEWRA !",
+            style: GoogleFonts.ebGaramond(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+            ),
+          ),
           const SizedBox(height: 10),
           Text("Your daily partner for mental fitness. Train your focus, memory and cognitive agility with fun,bite-sized exercises.",
               style: TextStyle(color: Colors.grey[600], height: 1.5)),
@@ -965,7 +974,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Daily Goal", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text("Daily Goal", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
                 const SizedBox(height: 8),
                 const Text("Great job! You've unlocked today's customization bonus."),
                 const SizedBox(height: 12),
@@ -1027,7 +1036,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         : "Tasks to be done after 6 PM";
 
     final words = heading.split(' ');
-    final headingColor = isBefore6PM ? Colors.blue.shade700 : Colors.indigo.shade400;
+    final headingColor = Colors.green; // Changed to green as requested
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1049,8 +1058,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     padding: const EdgeInsets.only(right: 5.0),
                     child: Text(
                       words[i],
-                      style: TextStyle(
-                        fontSize: 16,
+                      style: GoogleFonts.ebGaramond(
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: headingColor,
                       ),
@@ -1227,14 +1236,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         children: [
           Row(
             children: [
-              Icon(Icons.stars, color: Colors.orange),
-              SizedBox(width: 10),
+              const Icon(Icons.stars, color: Colors.green),
+              const SizedBox(width: 10),
               Text("ACHIEVEMENT UNLOCKED", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, fontSize: 10)),
             ],
           ),
           const SizedBox(height: 10),
           Text("Master Your Momentum",
-              style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, fontSize: 22, fontWeight: FontWeight.bold)),
+              style: GoogleFonts.ebGaramond(color: Colors.green, fontSize: 22, fontWeight: FontWeight.bold)),
           const Text("After completing today's exercises now it's time to plan rest of your day with extra training and plans", style: TextStyle(color: Colors.grey, fontSize: 15)),
           const SizedBox(height: 20),
           _actionButton("Today's Tasks", null, Colors.green, Colors.white,() {

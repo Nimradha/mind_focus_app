@@ -653,32 +653,19 @@ _buildNoExternalFoodTask(),
 
   Widget _buildArticleTask(String title, String sub) {
     bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
-    return _taskContainer(
-      title: title,
-      sub: sub,
-      icon: Icons.article,
-      color: Colors.purple,
-      action: isChecked
-          ? _buildBadge("DONE", Colors.green.shade100, Colors.green)
-          : ElevatedButton(
-              onPressed: () => _startArticleChallenge(title, sub),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.black
-                    : Colors.white,
-                elevation: 0,
-                shape: const StadiumBorder(),
-                side: BorderSide(color: Colors.green.shade100),
-              ),
-              child: Text(
-                "Start",
-                style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.green.shade800
-                      : Colors.green,
-                ),
-              ),
-            ),
+    return GestureDetector(
+      onTap: isChecked
+          ? null
+          : () => _startArticleChallenge(title, sub),
+      child: _taskContainer(
+        title: title,
+        sub: sub,
+        icon: Icons.article,
+        color: Colors.purple,
+        action: isChecked
+            ? const Icon(Icons.check_circle, color: Colors.green)
+            : const Icon(Icons.radio_button_unchecked, color: Colors.grey),
+      ),
     );
   }
 
@@ -1644,7 +1631,7 @@ void _updateMarks(int points) async {
       context,
       MaterialPageRoute(
         builder: (context) => SocialMediaDelayIntroScreen(
-          pdfPath: 'assets/docs/article1.pdf',
+          pdfPath: 'assets/docs/SocialMediaHunger_Stormwrought.pdf',
           title: title,
           durationMinutes: durationMinutes,
         ),

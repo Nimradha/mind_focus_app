@@ -1,3 +1,4 @@
+
 # Newra — Mental & Physical Discipline App
 
 A cross-platform mobile application for building mental and physical discipline through a structured **30-day daily habit challenge system**. Newra combines physical activity tracking, guided mindfulness, cognitive training, and smart automation into a single, gamified platform.
@@ -87,8 +88,20 @@ A cross-platform mobile application for building mental and physical discipline 
 ---
 
 ## Screenshots
+<p align="center">
+  <img alt="WhatsApp Image 2026-08-25 at 07 56 52" src="https://github.com/user-attachments/assets/d9068a95-b4e4-4a6c-901d-b3f054a06108" width="150" />
+  <img alt="WhatsApp Image 2026-08-25 at 07 56 52 (1)" src="https://github.com/user-attachments/assets/11ed6ed9-cfde-4b51-b859-0ba59afa02b4" width="150" />
+  <img alt="WhatsApp Image 2026-08-25 at 07 56 53 (1)" src="https://github.com/user-attachments/assets/e70dce53-553d-4713-8e4c-4eec0ce6e353" width="150" />
+  <img alt="WhatsApp Image 2026-08-25 at 07 56 54 (1)" src="https://github.com/user-attachments/assets/6fd35839-042a-4291-9929-20a3587d3525" width="150" />
+  <img alt="WhatsApp Image 2026-08-25 at 07 56 54 (2)" src="https://github.com/user-attachments/assets/7ec545ac-b56e-4bf4-9853-1fc1c2f5b4c9" width="150" />
+  <img alt="WhatsApp Image 2026-08-25 at 07 56 53 (2)" src="https://github.com/user-attachments/assets/739ffde7-05d2-4099-8de4-a5f8f71edfc4" width="150" />
+  <img alt="WhatsApp Image 2026-08-25 at 07 56 53" src="https://github.com/user-attachments/assets/246f1c68-15aa-426b-90a9-0ae46bfc57f2" width="150" />
+  <img alt="WhatsApp Image 2026-08-25 at 07 56 54" src="https://github.com/user-attachments/assets/71efef34-ec07-4ccb-bda1-30083ba3750f" width="150" />
+</p>
 
-*Coming soon*
+
+
+
 
 ---
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:alarm/alarm.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/permission_service.dart';
 
 class AlarmTab extends StatefulWidget {
@@ -91,18 +92,34 @@ class _AlarmTabState extends State<AlarmTab> {
         centerTitle: true,
         title: Text(
           headerText,
-          style: TextStyle(
-            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+          style: GoogleFonts.ebGaramond(
+            color: Colors.green,
             fontSize: 22,
             fontWeight: FontWeight.w400,
           ),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.add, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, size: 28),
+            icon: const Icon(Icons.add, color: Colors.green, size: 28),
             onPressed: () => _pickTime(context),
           ),
-          Icon(Icons.more_vert, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.green),
+            onSelected: (value) {
+              if (value == 'Sort') {
+                _showSortOptions(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("$value clicked")));
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              return const [
+                PopupMenuItem<String>(value: 'Edit', child: Text('Edit')),
+                PopupMenuItem<String>(value: 'Sort', child: Text('Sort')),
+                PopupMenuItem<String>(value: 'Settings', child: Text('Settings')),
+              ];
+            },
+          ),
           const SizedBox(width: 10),
         ],
       ),
@@ -297,5 +314,48 @@ class _AlarmTabState extends State<AlarmTab> {
         ),
       );
     }
+  }
+
+  void _showSortOptions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Sort Alarms'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.access_time, color: Colors.green),
+                title: const Text('Alarm time order'),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    alarms.sort((a, b) {
+                      return a['time'].toString().compareTo(b['time'].toString());
+                    });
+                  });
+                  _saveAlarms();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.format_list_bulleted, color: Colors.green),
+                title: const Text('Custom order'),
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Custom order selected'),
+                      backgroundColor: Colors.green,
+                    )
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      }
+    );
   }
 }

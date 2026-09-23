@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'pdf_viewer_screen.dart';
 import 'social_media_delay_intro_screen.dart';
 import 'food_delay_screen.dart';
@@ -566,10 +567,10 @@ _buildNoExternalFoodTask(),
           children: [
             Text(
               "NEWRA",
-              style: TextStyle(
-                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+              style: GoogleFonts.ebGaramond(
+                color: const Color(0xFFD4AF37), // Classic metallic gold color
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: 22,
               ),
             ),
             Text("Elevate your focus", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
@@ -585,7 +586,7 @@ _buildNoExternalFoodTask(),
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(currentMonthYear, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(currentMonthYear, style: GoogleFonts.ebGaramond(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
         Row(
           children: [
             Icon(Icons.chevron_left, color: Colors.grey[400]),
@@ -1716,7 +1717,7 @@ void _updateMarks(int points) async {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text("Today's Tasks", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text("Today's Tasks", style: GoogleFonts.ebGaramond(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(color: Colors.green.withOpacity(0.09), borderRadius: BorderRadius.circular(20)),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../provider/theme_provider.dart';
 import 'login_screen.dart';
@@ -73,7 +74,7 @@ class ProfileScreen extends StatelessWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.green[50],
-        title: const Text('My Profile'),
+        title: Text('My Profile', style: GoogleFonts.ebGaramond(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 24)),
         elevation: 0,
       ),
       body: ListView(
@@ -108,7 +109,9 @@ class ProfileScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        currentUser?.displayName ?? 'Logged-in User',
+                        (currentUser?.displayName == null || currentUser!.displayName!.trim().isEmpty) 
+                            ? 'Logged-in User' 
+                            : currentUser.displayName!,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -131,9 +134,9 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Display Section
-          const Text(
+          Text(
             'Display',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: GoogleFonts.ebGaramond(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),
           ),
           const SizedBox(height: 8),
           SwitchListTile(
@@ -149,9 +152,9 @@ class ProfileScreen extends StatelessWidget {
           const Divider(height: 32),
 
           // Account Management / Logout Section
-          const Text(
+          Text(
             'Account Settings',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: GoogleFonts.ebGaramond(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),
           ),
           const SizedBox(height: 12),
           ListTile(

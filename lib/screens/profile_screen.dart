@@ -74,7 +74,7 @@ class ProfileScreen extends StatelessWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.green[50],
-        title: Text('My Profile', style: GoogleFonts.ebGaramond(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 24)),
+        title: Text('My Profile', style: GoogleFonts.ebGaramond(color: const Color(0xFFD4AF37), fontWeight: FontWeight.bold, fontSize: 26)),
         elevation: 0,
       ),
       body: ListView(
@@ -136,7 +136,7 @@ class ProfileScreen extends StatelessWidget {
           // Display Section
           Text(
             'Display',
-            style: GoogleFonts.ebGaramond(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),
+            style: GoogleFonts.ebGaramond(fontSize: 26, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37)),
           ),
           const SizedBox(height: 8),
           SwitchListTile(
@@ -154,7 +154,7 @@ class ProfileScreen extends StatelessWidget {
           // Account Management / Logout Section
           Text(
             'Account Settings',
-            style: GoogleFonts.ebGaramond(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),
+            style: GoogleFonts.ebGaramond(fontSize: 26, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37)),
           ),
           const SizedBox(height: 12),
           ListTile(

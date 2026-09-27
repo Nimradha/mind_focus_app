@@ -831,7 +831,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(formattedDate, style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold)),
+            Text(formattedDate, style: const TextStyle(color: Color(0xFFD4AF37), fontSize: 12, fontWeight: FontWeight.bold)),
             Text("$greeting, $shortDisplayName!",
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           ],
@@ -946,9 +946,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Text(
             "Welcome to NEWRA !",
             style: GoogleFonts.ebGaramond(
-              fontSize: 22,
+              fontSize: 26,
               fontWeight: FontWeight.bold,
-              color: Colors.green,
+              color: const Color(0xFFD4AF37),
             ),
           ),
           const SizedBox(height: 10),
@@ -964,9 +964,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.05),
+        color: const Color(0xFFD4AF37).withOpacity(0.05),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.green.shade100),
+        border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.4)),
       ),
       child: Row(
         children: [
@@ -974,7 +974,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Daily Goal", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
+                Text("Daily Goal", style: GoogleFonts.ebGaramond(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37))),
                 const SizedBox(height: 8),
                 const Text("Great job! You've unlocked today's customization bonus."),
                 const SizedBox(height: 12),
@@ -991,7 +991,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   value: progress,
                   strokeWidth: 8,
                   backgroundColor: Colors.white,
-                  color: Colors.green,
+                  color: const Color(0xFFD4AF37),
                 ),
               ),
               Text("$doneCount/4", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
@@ -1012,9 +1012,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child:  Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.trending_up, color: Colors.green, size: 16),
+          Icon(Icons.trending_up, color: const Color(0xFFD4AF37), size: 16),
           SizedBox(width: 5),
-          Text("+$percent% today", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+          Text("+$percent% today", style: TextStyle(color: const Color(0xFFD4AF37), fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -1036,7 +1036,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         : "Tasks to be done after 6 PM";
 
     final words = heading.split(' ');
-    final headingColor = Colors.green; // Changed to green as requested
+    final headingColor = const Color(0xFFD4AF37);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1087,8 +1087,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(30),
         border: Theme.of(context).brightness == Brightness.dark
-            ? Border.all(color: Colors.green.shade100)
-            : Border.all(color: Colors.grey.shade200),
+            ? Border.all(color: const Color(0xFFD4AF37).withOpacity(0.4))
+            : Border.all(color: const Color(0xFFD4AF37).withOpacity(0.25)),
       ),
       child: Row(
         children: [
@@ -1122,7 +1122,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               padding: const EdgeInsets.symmetric(horizontal: 5.0), // Increases tap area
               child: Icon(
                 isDone ? Icons.check_circle : Icons.circle_outlined,
-                color: isDone ? Colors.green : (exercise.isEnabled ? Colors.grey : Colors.grey.shade300),
+                color: isDone ? const Color(0xFFD4AF37) : (exercise.isEnabled ? Colors.grey : Colors.grey.shade300),
               ),
             ),
           ),
@@ -1158,7 +1158,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
           // 3. Dynamic Button/Badge
           isDone
-              ? _buildBadge("DONE", Colors.green.shade100, Colors.green)
+              ? _buildBadge("DONE", const Color(0xFFD4AF37).withOpacity(0.15), const Color(0xFFD4AF37))
               : ElevatedButton(
             onPressed: !exercise.isEnabled ? null : () async {
 
@@ -1206,9 +1206,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   : Colors.white,
               elevation: 0,
               shape: const StadiumBorder(),
-              side: BorderSide(color: Colors.green.shade100),
+              side: const BorderSide(color: Color(0xFFD4AF37)),
             ),
-            child: Text("Start", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade800 : Colors.green)),
+            child: const Text("Start", style: TextStyle(color: Color(0xFFD4AF37))),
           )
         ],
       ),
@@ -1228,25 +1228,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.08),
+        color: const Color(0xFFD4AF37).withOpacity(0.08),
         borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.green.shade100),
+        border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.4)),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              const Icon(Icons.stars, color: Colors.green),
+              const Icon(Icons.stars, color: Color(0xFFD4AF37)),
               const SizedBox(width: 10),
               Text("ACHIEVEMENT UNLOCKED", style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, fontSize: 10)),
             ],
           ),
           const SizedBox(height: 10),
           Text("Master Your Momentum",
-              style: GoogleFonts.ebGaramond(color: Colors.green, fontSize: 22, fontWeight: FontWeight.bold)),
+              style: GoogleFonts.ebGaramond(color: const Color(0xFFD4AF37), fontSize: 26, fontWeight: FontWeight.bold)),
           const Text("After completing today's exercises now it's time to plan rest of your day with extra training and plans", style: TextStyle(color: Colors.grey, fontSize: 15)),
           const SizedBox(height: 20),
-          _actionButton("Today's Tasks", null, Colors.green, Colors.white,() {
+          _actionButton("Today's Tasks", null, const Color(0xFFD4AF37), Colors.black,() {
             if (widget.onTaskPressed != null) {
               widget.onTaskPressed!(); // This triggers the tab switch in MainWrapper
             }

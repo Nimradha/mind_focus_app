@@ -81,6 +81,7 @@ class _PlanScreenState extends State<PlanScreen> {
   }
   Map<int, bool> _dayTasksDone = {};
   Map<String, bool> _challengeChecked = {};
+  Map<String, Map<String, dynamic>> _activeTimers = {};
 
   List<DateTime> _generateCurrentWeek() {
     DateTime now = DateTime.now();
@@ -197,7 +198,7 @@ class _PlanScreenState extends State<PlanScreen> {
           return [
             _buildSimpleDelayTask("Delay 5 minutes from taking your favorite food item", 2),
             const SizedBox(height: 15),
-            _buildArticleTask("15 min social media delay", "Read the given article to improve focus"),
+            _buildArticleTask("15 min social media delay", "Read the given article to improve focus", pdfPath: 'assets/docs/article2.pdf'),
           ];
         case 6: // Day 6
           return [
@@ -586,7 +587,7 @@ _buildNoExternalFoodTask(),
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(currentMonthYear, style: GoogleFonts.ebGaramond(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
+        Text(currentMonthYear, style: GoogleFonts.ebGaramond(fontSize: 26, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37))),
         Row(
           children: [
             Icon(Icons.chevron_left, color: Colors.grey[400]),
@@ -631,14 +632,14 @@ _buildNoExternalFoodTask(),
         Container(
           height: 45, width: 45,
           decoration: BoxDecoration(
-            color: isSelected ? Colors.green : (isDone ? Colors.green.withOpacity(0.1) : Colors.transparent),
+            color: isSelected ? const Color(0xFFD4AF37) : (isDone ? const Color(0xFFD4AF37).withOpacity(0.15) : Colors.transparent),
             shape: BoxShape.circle,
             border: isDone ? null : Border.all(color: Colors.grey.shade200),
           ),
           alignment: Alignment.center,
           child: isDone
-              ? const Icon(Icons.check_circle, color: Colors.green, size: 20)
-              : Text(date, style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+              ? const Icon(Icons.check_circle, color: Color(0xFFD4AF37), size: 20)
+              : Text(date, style: TextStyle(color: isSelected ? Colors.black : Colors.black, fontWeight: FontWeight.bold)),
         ),
       ],
     );
@@ -652,12 +653,12 @@ _buildNoExternalFoodTask(),
     );
   }
 
-  Widget _buildArticleTask(String title, String sub) {
+  Widget _buildArticleTask(String title, String sub, {String? pdfPath}) {
     bool isChecked = _challengeChecked['${programDay}_$title'] ?? false;
     return GestureDetector(
       onTap: isChecked
           ? null
-          : () => _startArticleChallenge(title, sub),
+          : () => _startArticleChallenge(title, sub, pdfPath: pdfPath),
       child: _taskContainer(
         title: title,
         sub: sub,
@@ -677,8 +678,29 @@ _buildNoExternalFoodTask(),
     final bool useFoodDelayEvaluateScreen = (programDay == 12 || programDay == 16 || programDay == 24);
 
     if (useFoodDelayScreen) {
+      final activeTimer = _activeTimers['${programDay}_$title'];
+      Widget actionWidget;
+      if (isChecked) {
+        actionWidget = const Icon(Icons.check_circle, color: Colors.green);
+      } else if (activeTimer != null) {
+        actionWidget = _ActiveTimerWidget(
+          endTime: activeTimer['endTime'] as DateTime,
+          totalMinutes: activeTimer['durationMinutes'] as int,
+          onComplete: () {
+            setState(() {
+              _activeTimers.remove('${programDay}_$title');
+              _challengeChecked['${programDay}_$title'] = true;
+            });
+            _saveChallengeState('${programDay}_$title', true);
+            _updateMarks(activeTimer['marks'] as int);
+          },
+        );
+      } else {
+        actionWidget = const Icon(Icons.radio_button_unchecked, color: Colors.grey);
+      }
+
       return GestureDetector(
-        onTap: isChecked
+        onTap: (isChecked || activeTimer != null)
             ? null
             : () => _startSimpleDelayChallenge(title, marks),
         child: _taskContainer(
@@ -686,21 +708,7 @@ _buildNoExternalFoodTask(),
           sub: "Mental Discipline",
           icon: Icons.timer,
           color: Colors.orange,
-          action: IgnorePointer(
-            ignoring: !isChecked,
-            child: Checkbox(
-              value: isChecked,
-              onChanged: (val) {
-                if (val == false) {
-                  setState(() {
-                    _challengeChecked['${programDay}_$title'] = false;
-                  });
-                  _saveChallengeState('${programDay}_$title', false);
-                  _updateMarks(-marks);
-                }
-              },
-            ),
-          ),
+          action: actionWidget,
         ),
       );
     } else if (useMorningPhoneBanScreen) {
@@ -1620,7 +1628,7 @@ void _updateMarks(int points) async {
     );
   }
 
-  void _startArticleChallenge(String title, String sub) async {
+  void _startArticleChallenge(String title, String sub, {String? pdfPath}) async {
     int durationMinutes = 15;
     if (title.contains("30")) {
       durationMinutes = 30;
@@ -1632,7 +1640,7 @@ void _updateMarks(int points) async {
       context,
       MaterialPageRoute(
         builder: (context) => SocialMediaDelayIntroScreen(
-          pdfPath: 'assets/docs/SocialMediaHunger_Stormwrought.pdf',
+          pdfPath: pdfPath ?? 'assets/docs/SocialMediaHunger_Stormwrought.pdf',
           title: title,
           durationMinutes: durationMinutes,
         ),
@@ -1659,14 +1667,22 @@ void _updateMarks(int points) async {
       durationMinutes = 30;
     }
 
-    final completed = await Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => FoodDelayScreen(durationMinutes: durationMinutes),
       ),
     );
 
-    if (completed == true) {
+    if (result == 'start_timer') {
+      setState(() {
+        _activeTimers['${programDay}_$title'] = {
+          'endTime': DateTime.now().add(Duration(minutes: durationMinutes)),
+          'durationMinutes': durationMinutes,
+          'marks': marks,
+        };
+      });
+    } else if (result == true) {
       setState(() {
         _challengeChecked['${programDay}_$title'] = true;
       });
@@ -1717,7 +1733,7 @@ void _updateMarks(int points) async {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text("Today's Tasks", style: GoogleFonts.ebGaramond(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
+        Text("Today's Tasks", style: GoogleFonts.ebGaramond(fontSize: 26, fontWeight: FontWeight.bold, color: const Color(0xFFD4AF37))),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(color: Colors.green.withOpacity(0.09), borderRadius: BorderRadius.circular(20)),
@@ -1769,4 +1785,78 @@ void _updateMarks(int points) async {
     );
   }
 
+}
+
+class _ActiveTimerWidget extends StatefulWidget {
+  final DateTime endTime;
+  final int totalMinutes;
+  final VoidCallback onComplete;
+
+  const _ActiveTimerWidget({
+    required this.endTime,
+    required this.totalMinutes,
+    required this.onComplete,
+  });
+
+  @override
+  State<_ActiveTimerWidget> createState() => _ActiveTimerWidgetState();
+}
+
+class _ActiveTimerWidgetState extends State<_ActiveTimerWidget> {
+  late Timer _timer;
+  int _remainingSeconds = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateRemaining();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      _updateRemaining();
+    });
+  }
+
+  void _updateRemaining() {
+    final now = DateTime.now();
+    final remaining = widget.endTime.difference(now).inSeconds;
+    if (remaining <= 0) {
+      _timer.cancel();
+      widget.onComplete();
+    } else {
+      setState(() {
+        _remainingSeconds = remaining;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final totalSeconds = widget.totalMinutes * 60;
+    final progress = 1.0 - (_remainingSeconds / totalSeconds).clamp(0.0, 1.0);
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          width: 32, height: 32,
+          child: CircularProgressIndicator(
+            value: progress,
+            strokeWidth: 3,
+            backgroundColor: Colors.grey.shade300,
+            color: Colors.orange,
+          ),
+        ),
+        Text(
+          '${_remainingSeconds ~/ 60}:${(_remainingSeconds % 60).toString().padLeft(2, '0')}',
+          style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
 }

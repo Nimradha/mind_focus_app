@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MasterWeaknessScreen extends StatefulWidget {
   const MasterWeaknessScreen({super.key});
@@ -93,10 +94,9 @@ class _MasterWeaknessScreenState extends State<MasterWeaknessScreen> {
     int idx = 0;
 
     final wTitle = _buildAnimatedText(sec1Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 20,
-            color: Colors.amberAccent));
+            color: Colors.white));
     idx += sec1Words.length;
 
     final wIdentify = _buildAnimatedText(sec2Words, idx,
@@ -112,10 +112,9 @@ class _MasterWeaknessScreenState extends State<MasterWeaknessScreen> {
     idx += sec4Words.length;
 
     final wOwnIt = _buildAnimatedText(sec5Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 14,
-            color: Colors.cyanAccent,
+            color: Colors.white,
             height: 1.6));
     idx += sec5Words.length;
 

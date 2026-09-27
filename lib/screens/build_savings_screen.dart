@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class BuildSavingsScreen extends StatefulWidget {
   const BuildSavingsScreen({super.key});
@@ -89,17 +90,15 @@ class _BuildSavingsScreenState extends State<BuildSavingsScreen> {
     int idx = 0;
 
     final wTitle = _buildAnimatedText(sec1Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 20,
-            color: Colors.amberAccent));
+            color: Colors.white));
     idx += sec1Words.length;
 
     final wStop = _buildAnimatedText(sec2Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 15,
-            color: Colors.redAccent,
+            color: Colors.white,
             height: 1.5));
     idx += sec2Words.length;
 

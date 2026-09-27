@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class NoScrollFoodScreen extends StatefulWidget {
   const NoScrollFoodScreen({super.key});
@@ -94,10 +95,9 @@ class _NoScrollFoodScreenState extends State<NoScrollFoodScreen> {
     int idx = 0;
 
     final w1 = _buildAnimatedText(sec1Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 18,
-            color: Colors.tealAccent));
+            color: Colors.white));
     idx += sec1Words.length;
 
     final w2 = _buildAnimatedText(sec2Words, idx,
@@ -106,10 +106,9 @@ class _NoScrollFoodScreenState extends State<NoScrollFoodScreen> {
     idx += sec2Words.length;
 
     final w3 = _buildAnimatedText(sec3Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 18,
-            color: Colors.cyanAccent));
+            color: Colors.white));
     idx += sec3Words.length;
 
     final w4 = _buildAnimatedText(sec4Words, idx,
@@ -118,10 +117,9 @@ class _NoScrollFoodScreenState extends State<NoScrollFoodScreen> {
     idx += sec4Words.length;
 
     final w5 = _buildAnimatedText(sec5Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 15,
-            color: Colors.orangeAccent));
+            color: Colors.white));
     idx += sec5Words.length;
 
     final w6 = _buildAnimatedText(sec6Words, idx,

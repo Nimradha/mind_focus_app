@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MindDriftScreen extends StatefulWidget {
   const MindDriftScreen({super.key});
@@ -86,10 +87,9 @@ class _MindDriftScreenState extends State<MindDriftScreen> {
     int idx = 0;
 
     final wTitle = _buildAnimatedText(sec1Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 20,
-            color: Colors.orangeAccent));
+            color: Colors.white));
     idx += sec1Words.length;
 
     final wDesc = _buildAnimatedText(sec2Words, idx,
@@ -97,10 +97,9 @@ class _MindDriftScreenState extends State<MindDriftScreen> {
     idx += sec2Words.length;
 
     final wWhy = _buildAnimatedText(sec3Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: Colors.cyanAccent));
+            color: Colors.white));
     idx += sec3Words.length;
 
     final wWhyDesc = _buildAnimatedText(sec4Words, idx,

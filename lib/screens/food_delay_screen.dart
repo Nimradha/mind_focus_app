@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class FoodDelayScreen extends StatefulWidget {
   final int durationMinutes;
@@ -111,7 +112,7 @@ class _FoodDelayScreenState extends State<FoodDelayScreen> {
     int idx = 0;
 
     final w1 = _buildAnimatedText(sec1_words, idx,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.greenAccent));
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white));
     idx += sec1_words.length;
 
     final w2 = _buildAnimatedText(sec2_words, idx,
@@ -119,11 +120,11 @@ class _FoodDelayScreenState extends State<FoodDelayScreen> {
     idx += sec2_words.length;
 
     final w3 = _buildAnimatedText(sec3_words, idx,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.cyanAccent));
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white));
     idx += sec3_words.length;
 
     final w4 = _buildAnimatedText(sec4_words, idx,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.orangeAccent));
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white));
     idx += sec4_words.length;
 
     final w5 = _buildAnimatedText(sec5_words, idx,
@@ -131,7 +132,7 @@ class _FoodDelayScreenState extends State<FoodDelayScreen> {
     idx += sec5_words.length;
 
     final w6 = _buildAnimatedText(sec6_words, idx,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.orangeAccent));
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white));
     idx += sec6_words.length;
 
     final w7 = _buildAnimatedText(sec7_words, idx,
@@ -139,7 +140,7 @@ class _FoodDelayScreenState extends State<FoodDelayScreen> {
     idx += sec7_words.length;
 
     final w8 = _buildAnimatedText(sec8_words, idx,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.redAccent));
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white));
     idx += sec8_words.length;
 
     final w9 = _buildAnimatedText(sec9_words, idx,
@@ -147,7 +148,7 @@ class _FoodDelayScreenState extends State<FoodDelayScreen> {
     idx += sec9_words.length;
 
     final w10 = _buildAnimatedText(sec10_words, idx,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.cyanAccent));
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white));
     idx += sec10_words.length;
 
     final w11 = _buildAnimatedText(sec11_words, idx,
@@ -257,7 +258,7 @@ class _FoodDelayScreenState extends State<FoodDelayScreen> {
             child: SafeArea(
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context, true);
+                  Navigator.pop(context, 'start_timer');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
@@ -269,7 +270,7 @@ class _FoodDelayScreenState extends State<FoodDelayScreen> {
                   elevation: 2,
                 ),
                 child: const Text(
-                  'Mark as Done',
+                  'Start',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

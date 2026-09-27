@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class TrackMentalEnergyScreen extends StatefulWidget {
   const TrackMentalEnergyScreen({super.key});
@@ -108,10 +109,9 @@ class _TrackMentalEnergyScreenState extends State<TrackMentalEnergyScreen> {
     int idx = 0;
 
     final wTitle = _buildAnimatedText(sec1Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 20,
-            color: Colors.amberAccent));
+            color: Colors.white));
     idx += sec1Words.length;
 
     final wMonitor = _buildAnimatedText(sec2Words, idx,
@@ -131,10 +131,9 @@ class _TrackMentalEnergyScreenState extends State<TrackMentalEnergyScreen> {
     idx += sec5Words.length;
 
     final wRealize = _buildAnimatedText(sec6Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 14,
-            color: Colors.cyanAccent,
+            color: Colors.white,
             height: 1.6));
     idx += sec6Words.length;
 
@@ -143,10 +142,9 @@ class _TrackMentalEnergyScreenState extends State<TrackMentalEnergyScreen> {
     idx += sec7Words.length;
 
     final wTarget = _buildAnimatedText(sec8Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 14,
-            color: Colors.orangeAccent,
+            color: Colors.white,
             height: 1.6));
     idx += sec8Words.length;
 

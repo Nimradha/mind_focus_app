@@ -93,18 +93,18 @@ class _AlarmTabState extends State<AlarmTab> {
         title: Text(
           headerText,
           style: GoogleFonts.ebGaramond(
-            color: Colors.green,
-            fontSize: 22,
+            color: const Color(0xFFD4AF37),
+            fontSize: 26,
             fontWeight: FontWeight.w400,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add, color: Colors.green, size: 28),
+            icon: const Icon(Icons.add, color: Color(0xFFD4AF37), size: 28),
             onPressed: () => _pickTime(context),
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.green),
+            icon: const Icon(Icons.more_vert, color: Color(0xFFD4AF37)),
             onSelected: (value) {
               if (value == 'Sort') {
                 _showSortOptions(context);
@@ -143,7 +143,7 @@ class _AlarmTabState extends State<AlarmTab> {
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Theme.of(context).brightness == Brightness.dark ? Border.all(color: Colors.green.shade100) : null,
+        border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.4)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -358,4 +358,4 @@ class _AlarmTabState extends State<AlarmTab> {
       }
     );
   }
-}
+}

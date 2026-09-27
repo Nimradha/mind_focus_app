@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class UltimateTestScreen extends StatefulWidget {
   const UltimateTestScreen({super.key});
@@ -98,10 +99,9 @@ class _UltimateTestScreenState extends State<UltimateTestScreen> {
     int idx = 0;
 
     final wTitle = _buildAnimatedText(sec1Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 20,
-            color: Colors.amberAccent));
+            color: Colors.white));
     idx += sec1Words.length;
 
     final wMeditate = _buildAnimatedText(sec2Words, idx,
@@ -121,10 +121,9 @@ class _UltimateTestScreenState extends State<UltimateTestScreen> {
     idx += sec5Words.length;
 
     final wDominate = _buildAnimatedText(sec6Words, idx,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        style: GoogleFonts.ebGaramond(fontWeight: FontWeight.bold,
             fontSize: 14,
-            color: Colors.cyanAccent,
+            color: Colors.white,
             height: 1.6));
     idx += sec6Words.length;
 
